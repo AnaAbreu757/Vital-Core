@@ -2,9 +2,9 @@ name: Android CI
 
 on:
 push:
-branches: [ "main" ]
+branches: ["main"]
 pull_request:
-branches: [ "main" ]
+branches: ["main"]
 
 jobs:
 build:
@@ -19,7 +19,7 @@ steps:
     uses: actions/setup-java@v4
     with:
       distribution: temurin
-      java-version: '17'
+      java-version: "17"
 
   - name: Setup Gradle
     uses: gradle/actions/setup-gradle@v4
