@@ -37,16 +37,6 @@
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
-
-            <!-- Strava OAuth redirect (see integrations/strava/StravaAuthManager).
-                 Matches the "vitalcore" scheme registered as the Authorization
-                 Callback Domain in your Strava API application settings. -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="${stravaRedirectScheme}" android:host="strava-callback" />
-            </intent-filter>
         </activity>
 
         <activity-alias

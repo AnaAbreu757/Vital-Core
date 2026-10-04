@@ -14,7 +14,3 @@ FIREBASE_STORAGE_BUCKET=
 # From Firebase Console > Authentication > Sign-in method > Google > Web SDK configuration
 # (this is a "Web application" OAuth client ID, NOT the Android one)
 GOOGLE_WEB_CLIENT_ID=
-
-# --- Strava (developers.strava.com > My API Application) ---
-STRAVA_CLIENT_ID=
-STRAVA_CLIENT_SECRET=

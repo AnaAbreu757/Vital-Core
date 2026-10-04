@@ -8,15 +8,15 @@ plugins {
 }
 
 // --- Secrets loaded from local.properties (gitignored — never committed) ---
-// Firebase, Google Sign-In, and Strava all need credentials that are specific
-// to *your* accounts. Rather than requiring the Google Services Gradle
-// plugin (which needs a google-services.json resource file and fails the
-// whole build if it's missing), every value below is read from
-// local.properties and injected as a BuildConfig field, defaulting to an
-// empty string when absent. This means: (1) the project builds out of the
-// box before you've configured anything, and (2) each feature degrades to a
-// clear "not configured" message at runtime instead of a build failure.
-// See MANUAL_DEPLOY.md for exactly what to put in local.properties.
+// Firebase and Google Sign-In both need credentials that are specific to
+// *your* accounts. Rather than requiring the Google Services Gradle plugin
+// (which needs a google-services.json resource file and fails the whole
+// build if it's missing), every value below is read from local.properties
+// and injected as a BuildConfig field, defaulting to an empty string when
+// absent. This means: (1) the project builds out of the box before you've
+// configured anything, and (2) each feature degrades to a clear "not
+// configured" message at runtime instead of a build failure. See
+// MANUAL_DEPLOY.md for exactly what to put in local.properties.
 val localProperties = java.util.Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) file.inputStream().use { load(it) }
@@ -41,10 +41,6 @@ android {
         buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${secret("FIREBASE_PROJECT_ID")}\"")
         buildConfigField("String", "FIREBASE_STORAGE_BUCKET", "\"${secret("FIREBASE_STORAGE_BUCKET")}\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${secret("GOOGLE_WEB_CLIENT_ID")}\"")
-        buildConfigField("String", "STRAVA_CLIENT_ID", "\"${secret("STRAVA_CLIENT_ID")}\"")
-        buildConfigField("String", "STRAVA_CLIENT_SECRET", "\"${secret("STRAVA_CLIENT_SECRET")}\"")
-
-        manifestPlaceholders["stravaRedirectScheme"] = "vitalcore"
     }
 
     buildTypes {
