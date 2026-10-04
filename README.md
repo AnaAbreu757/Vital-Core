@@ -61,9 +61,6 @@ What exists right now:
 - **Google Sign-In + Firebase cloud backup** (`auth/`) — optional account via Google
   Sign-In (Credential Manager), federated into Firebase Auth. Once signed in, scores can be
   backed up to Firestore. Fully optional — the app works completely without an account.
-- **Strava connection** (`integrations/strava/`) — a real OAuth2 integration. Imports
-  recent activities into the same table Health Connect data lands in, so they count toward
-  Strain identically. Requires your own free Strava API application.
 - **Samsung Health / Xiaomi Wear / Mi Fit** — already covered via Health Connect; there is
   no separate public third-party API for these on Android, so VitalCore doesn't fake one.
 - **Apple Health import** (`integrations/applehealth/`) — since no Android app can read
@@ -77,8 +74,8 @@ What exists right now:
 
 ## Deployment
 
-For GitHub publishing, Firebase project setup, Google Sign-In configuration, and Strava
-API registration — plus a full honest explanation of what's real vs. not possible for
+For GitHub publishing, Firebase project setup, and Google Sign-In configuration —
+plus a full honest explanation of what's real vs. not possible for
 Samsung Health/Apple Health/Mi Fit — see **`MANUAL_DEPLOY.md`**.
 
 ## Known gaps / next steps beyond this MVP
@@ -101,10 +98,6 @@ Honest gaps a real team would tackle next:
 - Firebase cloud backup is one-way (device → cloud) in this MVP; pulling a backup down to
   restore it on a new device is stubbed (`CloudSyncRepository.restoreLatestBackupTimestamp`
   reads the timestamp but doesn't yet write the data back into local Room).
-- Strava's OAuth client secret is embedded in the built APK via `local.properties` →
-  `BuildConfig`, which is a reasonable simplification for a personal/single-user install
-  but not safe for public distribution — see `MANUAL_DEPLOY.md` section 4.3 for the
-  production-grade fix (proxy the token exchange through a backend).
 
 ## Requirements
 
