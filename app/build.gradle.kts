@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,8 +8,6 @@ plugins {
     alias(libs.plugins.ksp)
     kotlin("plugin.serialization") version "2.0.21"
 }
-
-import java.util.Properties
 
 // --- Secrets loaded from local.properties (gitignored — never committed) ---
 // Firebase and Google Sign-In both need credentials that are specific to
