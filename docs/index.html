@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>VitalCore Web</title>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f7f8fa; --surface: #ffffff; --surface-2: #f1f3f6; --text: #15181d;
+    --text-dim: #6b7280; --border: #e5e7eb; --accent: #4f7cff; --accent-2: #22c08f; --accent-3: #ff7a59;
+    --danger: #e0453c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1115; --surface: #171a21; --surface-2: #1f232b; --text: #f2f3f5; --text-dim: #9aa1ad; --border: #272b33; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 18px 60px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand .dot { width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+  .brand h1 { font-size: 18px; margin: 0; letter-spacing: -0.01em; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn.secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+  .muted { color: var(--text-dim); font-size: 13px; line-height: 1.5; }
+  .center { text-align: center; }
+  .hidden { display: none !important; }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 4px; }
+  .stat { background: var(--surface-2); border-radius: 12px; padding: 14px 10px; text-align: center; }
+  .stat .label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat .value { font-size: 26px; font-weight: 700; margin-top: 4px; }
+  .stat.recovery .value { color: var(--accent-2); }
+  .stat.sleep .value { color: var(--accent); }
+  .stat.strain .value { color: var(--accent-3); }
+  .chart-title { font-size: 13px; font-weight: 600; color: var(--text-dim); margin: 18px 0 8px; }
+  canvas { max-width: 100%; }
+  .overflow-x { overflow-x: auto; }
+  .banner { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
+  .err { color: var(--danger); font-size: 13px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><div class="dot"></div><h1>VitalCore Web</h1></div>
+  </div>
+  <div class="banner">
+    Painel de leitura, separado da app Android. Mostra os scores que a app já fez
+    backup para a cloud (Settings → Conta → "Back up now"). Não lê o relógio
+    diretamente — isso só a app Android consegue, via Health Connect.
+  </div>
+  <div id="signedOutCard" class="card center">
+    <p class="muted" style="margin-top:0">Inicia sessão com a mesma conta Google que usas na app VitalCore.</p>
+    <button class="btn" id="signInBtn">Iniciar sessão com Google</button>
+    <p id="authError" class="err hidden" style="margin-top:12px"></p>
+  </div>
+  <div id="signedInArea" class="hidden">
+    <div class="card">
+      <div class="row" style="justify-content: space-between;">
+        <div>
+          <div style="font-weight:600" id="userName">—</div>
+          <div class="muted" id="userEmail">—</div>
+        </div>
+        <button class="btn secondary" id="signOutBtn">Sair</button>
+      </div>
+    </div>
+    <div id="loadingState" class="card center"><p class="muted">A carregar os teus dados…</p></div>
+    <div id="noDataState" class="card center hidden">
+      <p><strong>Ainda não há dados na cloud</strong></p>
+      <p class="muted">Abre a app VitalCore no telemóvel → Settings → Conta → "Back up now". Depois volta aqui e atualiza a página.</p>
+    </div>
+    <div id="dataArea" class="hidden">
+      <div class="card">
+        <div class="stat-grid">
+          <div class="stat recovery"><div class="label">Recovery</div><div class="value" id="latestRecovery">—</div></div>
+          <div class="stat sleep"><div class="label">Sleep</div><div class="value" id="latestSleep">—</div></div>
+          <div class="stat strain"><div class="label">Strain</div><div class="value" id="latestStrain">—</div></div>
+        </div>
+        <p class="muted" id="lastBackupLabel" style="margin-bottom:0; margin-top:12px;"></p>
+      </div>
+      <div class="card">
+        <div class="chart-title">Recovery (últimos 30 dias)</div>
+        <div class="overflow-x"><canvas id="recoveryChart" height="160"></canvas></div>
+        <div class="chart-title">Sleep (últimos 30 dias)</div>
+        <div class="overflow-x"><canvas id="sleepChart" height="160"></canvas></div>
+        <div class="chart-title">Strain (últimos 30 dias)</div>
+        <div class="overflow-x"><canvas id="strainChart" height="160"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCv7JN3BQFnmHLV4hd2Uv6si4o9Euo78u4",
+    authDomain: "vital-core-d5c30.firebaseapp.com",
+    projectId: "vital-core-d5c30",
+    storageBucket: "vital-core-d5c30.firebasestorage.app",
+    messagingSenderId: "527487551660",
+    appId: "1:527487551660:android:7ecbf5e5680c05097a3709",
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const $ = (id) => document.getElementById(id);
+
+  function epochDayToDateLabel(epochDayStr) {
+    const epochDay = parseInt(epochDayStr, 10);
+    const d = new Date(epochDay * 86400000);
+    return d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
+  }
+
+  function buildSeries(mapObj, field, limitDays) {
+    const entries = Object.entries(mapObj || {})
+      .map(([k, v]) => ({ epochDay: parseInt(k, 10), value: v[field] }))
+      .filter((e) => typeof e.value === 'number' && !Number.isNaN(e.epochDay))
+      .sort((a, b) => a.epochDay - b.epochDay);
+    const recent = entries.slice(-limitDays);
+    return {
+      labels: recent.map((e) => epochDayToDateLabel(String(e.epochDay))),
+      values: recent.map((e) => e.value),
+      latest: recent.length ? recent[recent.length - 1].value : null,
+    };
+  }
+
+  let charts = {};
+  function renderChart(canvasId, labels, values, color) {
+    const ctx = $(canvasId).getContext('2d');
+    if (charts[canvasId]) charts[canvasId].destroy();
+    charts[canvasId] = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{ data: values, borderColor: color, backgroundColor: color + '33', fill: true, tension: 0.35, pointRadius: 2 }] },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 6 }, grid: { display: false } }, y: { grid: { color: 'rgba(128,128,128,0.15)' } } } },
+    });
+  }
+
+  async function loadData(uid) {
+    $('loadingState').classList.remove('hidden');
+    $('noDataState').classList.add('hidden');
+    $('dataArea').classList.add('hidden');
+    try {
+      const userDoc = await db.collection('users').doc(uid).get();
+      const recoveryDoc = await db.collection('users').doc(uid).collection('scores').doc('recovery').get();
+      const sleepDoc = await db.collection('users').doc(uid).collection('scores').doc('sleep').get();
+      const strainDoc = await db.collection('users').doc(uid).collection('scores').doc('strain').get();
+      const hasAny = recoveryDoc.exists || sleepDoc.exists || strainDoc.exists;
+      $('loadingState').classList.add('hidden');
+      if (!hasAny) { $('noDataState').classList.remove('hidden'); return; }
+      const recovery = buildSeries(recoveryDoc.data(), 'score', 30);
+      const sleep = buildSeries(sleepDoc.data(), 'score', 30);
+      const strain = buildSeries(strainDoc.data(), 'score', 30);
+      $('latestRecovery').textContent = recovery.latest ?? '—';
+      $('latestSleep').textContent = sleep.latest ?? '—';
+      $('latestStrain').textContent = strain.latest ?? '—';
+      const lastBackupEpochDay = userDoc.exists ? userDoc.data().lastBackupEpochDay : null;
+      $('lastBackupLabel').textContent = lastBackupEpochDay ? `Último backup: ${epochDayToDateLabel(String(lastBackupEpochDay))}` : '';
+      renderChart('recoveryChart', recovery.labels, recovery.values, '#22c08f');
+      renderChart('sleepChart', sleep.labels, sleep.values, '#4f7cff');
+      renderChart('strainChart', strain.labels, strain.values, '#ff7a59');
+      $('dataArea').classList.remove('hidden');
+    } catch (e) {
+      $('loadingState').classList.add('hidden');
+      $('noDataState').classList.remove('hidden');
+      $('noDataState').querySelector('p').textContent = 'Erro ao carregar dados: ' + (e.message || e);
+    }
+  }
+
+  $('signInBtn').addEventListener('click', async () => {
+    $('authError').classList.add('hidden');
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+    } catch (e) {
+      $('authError').textContent = (e && e.code === 'auth/unauthorized-domain')
+        ? 'Este domínio ainda não está autorizado no Firebase (Authentication → Settings → Authorized domains).'
+        : ('Erro ao iniciar sessão: ' + (e.message || e));
+      $('authError').classList.remove('hidden');
+    }
+  });
+  $('signOutBtn').addEventListener('click', () => auth.signOut());
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      $('signedOutCard').classList.add('hidden');
+      $('signedInArea').classList.remove('hidden');
+      $('userName').textContent = user.displayName || 'VitalCore';
+      $('userEmail').textContent = user.email || '';
+      loadData(user.uid);
+    } else {
+      $('signedOutCard').classList.remove('hidden');
+      $('signedInArea').classList.add('hidden');
+    }
+  });
+</script>
+</body>
+</html>
