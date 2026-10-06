@@ -105,7 +105,7 @@ class HealthConnectManager @Inject constructor(
             }
     }
 
-    suspend fun readDailyActivity(start: Instant, end: Instant): DailyActivity = safeRead<DailyActivity> {
+    suspend fun readDailyActivity(start: Instant, end: Instant): DailyActivity = safeReadOne {
         val steps = client!!.readRecords(ReadRecordsRequest(StepsRecord::class, range(start, end)))
             .records.sumOf { it.count }
         val calories = client!!.readRecords(ReadRecordsRequest(TotalCaloriesBurnedRecord::class, range(start, end)))
@@ -190,7 +190,7 @@ class HealthConnectManager @Inject constructor(
         }
     }
 
-    private suspend fun <T> safeRead(default: T? = null, block: suspend () -> T): T? {
+    private suspend fun <T> safeReadOne(default: T? = null, block: suspend () -> T): T? {
         if (client == null) return default
         return try {
             withContext(Dispatchers.IO) { block() }
