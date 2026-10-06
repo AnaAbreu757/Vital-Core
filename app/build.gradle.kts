@@ -7,6 +7,8 @@ plugins {
     kotlin("plugin.serialization") version "2.0.21"
 }
 
+import java.util.Properties
+
 // --- Secrets loaded from local.properties (gitignored — never committed) ---
 // Firebase and Google Sign-In both need credentials that are specific to
 // *your* accounts. Rather than requiring the Google Services Gradle plugin
@@ -17,7 +19,7 @@ plugins {
 // configured anything, and (2) each feature degrades to a clear "not
 // configured" message at runtime instead of a build failure. See
 // MANUAL_DEPLOY.md for exactly what to put in local.properties.
-val localProperties = java.util.Properties().apply {
+val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) file.inputStream().use { load(it) }
 }
