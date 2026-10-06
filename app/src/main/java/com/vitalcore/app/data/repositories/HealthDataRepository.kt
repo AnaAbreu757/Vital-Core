@@ -132,7 +132,7 @@ class HealthDataRepository @Inject constructor(
     }
 
     suspend fun snapshotsForRange(startDay: LocalDate, endDayInclusive: LocalDate): List<DailyHealthSnapshot> {
-        val days = generateSequence(startDay) { if (it.isBefore(endDayInclusive)) it.plusDays(1) else null }
-        return days.map { snapshotForDay(it) }.toList()
+        val days = generateSequence(startDay) { if (it.isBefore(endDayInclusive)) it.plusDays(1) else null }.toList()
+        return days.map { snapshotForDay(it) }
     }
 }

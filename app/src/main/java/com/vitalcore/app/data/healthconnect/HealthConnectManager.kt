@@ -105,7 +105,7 @@ class HealthConnectManager @Inject constructor(
             }
     }
 
-    suspend fun readDailyActivity(start: Instant, end: Instant): DailyActivity = safeRead {
+    suspend fun readDailyActivity(start: Instant, end: Instant): DailyActivity = safeRead<DailyActivity> {
         val steps = client!!.readRecords(ReadRecordsRequest(StepsRecord::class, range(start, end)))
             .records.sumOf { it.count }
         val calories = client!!.readRecords(ReadRecordsRequest(TotalCaloriesBurnedRecord::class, range(start, end)))
