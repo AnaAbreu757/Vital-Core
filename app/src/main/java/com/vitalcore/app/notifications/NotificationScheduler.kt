@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -19,7 +20,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class NotificationScheduler @Inject constructor(
-    private val context: Context,
+    @ApplicationContext private val context: Context,
 ) {
     private val workManager get() = WorkManager.getInstance(context)
 
