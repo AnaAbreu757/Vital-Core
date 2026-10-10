@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vitalcore.app.ai.AiConfig
@@ -131,6 +132,10 @@ private fun AccountSection(viewModel: AccountViewModel = hiltViewModel()) {
     val user by viewModel.currentUser.collectAsState()
     val busy by viewModel.busy.collectAsState()
     val message by viewModel.message.collectAsState()
+    // Credential Manager's sign-in UI requires an Activity context; inside
+    // this app's single Activity, LocalContext.current already is that
+    // Activity context (see AuthRepository.signInWithGoogle kdoc).
+    val context = LocalContext.current
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -147,7 +152,7 @@ private fun AccountSection(viewModel: AccountViewModel = hiltViewModel()) {
                         "restore them on another device. Everything works fully without an account too.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
-                Button(onClick = viewModel::signIn, enabled = !busy) { Text("Sign in with Google") }
+                Button(onClick = { viewModel.signIn(context) }, enabled = !busy) { Text("Sign in with Google") }
             }
             message?.let { Text(it, style = MaterialTheme.typography.labelMedium) }
         }
