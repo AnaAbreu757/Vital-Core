@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: ["main"]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -49,7 +52,7 @@ jobs:
       - name: Assemble debug APK
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Upload debug APK
+      - name: Upload debug APK (build artifact, 90-day expiry)
         uses: actions/upload-artifact@v4
         with:
           name: vitalcore-debug-apk
@@ -68,3 +71,18 @@ jobs:
         with:
           name: unit-test-results
           path: app/build/reports/tests/testDebugUnitTest
+
+      - name: Publish APK to a permanent 'latest' Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "VitalCore — latest build"
+          body: |
+            Automatically rebuilt from the latest commit on `main`
+            (${{ github.sha }}). This is a debug build — unsigned,
+            for personal installs only. Download `app-debug.apk` below.
+          prerelease: true
+          make_latest: true
+          files: app/build/outputs/apk/debug/app-debug.apk
+          token: ${{ secrets.GITHUB_TOKEN }}
