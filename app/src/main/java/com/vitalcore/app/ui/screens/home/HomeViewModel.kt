@@ -25,6 +25,8 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val loading: Boolean = true,
+    /** True while re-syncing after the first load; unlike [loading], this never blanks the screen. */
+    val refreshing: Boolean = false,
     val recoveryScore: Int? = null,
     val recoveryConfidence: String? = null,
     val sleepScore: Int? = null,
@@ -43,6 +45,12 @@ data class HomeUiState(
  * insight. This is the first screen wired to the real calculation engine
  * (Milestone 8) — Recovery/Sleep/Activity/Health screens follow the same
  * pattern with their own, more detailed ViewModels.
+ *
+ * refresh() is called on init (first load) AND on every app resume (see
+ * HomeScreen's LifecycleEventObserver) plus the manual refresh button —
+ * there is still no periodic background worker, so without one of these
+ * three triggers newly-synced Health Connect data (e.g. from a Google Fit
+ * bridge) would never appear until the app was killed and reopened.
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -62,7 +70,8 @@ class HomeViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(loading = true)
+            val hasDataAlready = _uiState.value.recoveryScore != null || _uiState.value.sleepScore != null
+            _uiState.value = _uiState.value.copy(loading = !hasDataAlready, refreshing = hasDataAlready)
 
             val today = LocalDate.now(ZoneOffset.UTC)
             val historyStart = today.minusDays(30)
@@ -136,6 +145,7 @@ class HomeViewModel @Inject constructor(
 
             _uiState.value = HomeUiState(
                 loading = false,
+                refreshing = false,
                 recoveryScore = recoveryResult.score,
                 recoveryConfidence = recoveryResult.confidence.name,
                 sleepScore = sleepResult.score,
