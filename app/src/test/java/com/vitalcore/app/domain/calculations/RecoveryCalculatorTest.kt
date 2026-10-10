@@ -25,6 +25,16 @@ class RecoveryCalculatorTest {
         activity = null,
     )
 
+    /**
+     * A baseline with genuine spread around [mean] (alternating ±2), rather
+     * than 20 identical values. A flat baseline has standardDeviation == 0,
+     * and BaselineStats.deviation() correctly returns null in that case (see
+     * its kdoc) — which would silently exclude every component relying on it
+     * instead of exercising the real z-score math these tests mean to check.
+     */
+    private fun baselineAround(mean: Double) =
+        BaselineEngine.compute(List(20) { i -> mean + (if (i % 2 == 0) 2.0 else -2.0) })!!
+
     @Test
     fun `no data at all yields zero score and low confidence`() {
         val result = RecoveryCalculator.calculate(
@@ -40,7 +50,7 @@ class RecoveryCalculatorTest {
 
     @Test
     fun `hrv above baseline increases score above neutral`() {
-        val baseline = BaselineEngine.compute(List(20) { 50.0 })!!
+        val baseline = baselineAround(50.0)
         val result = RecoveryCalculator.calculate(
             today = snapshot(hrv = 70.0),
             yesterdaySleepScore = null,
@@ -52,7 +62,7 @@ class RecoveryCalculatorTest {
 
     @Test
     fun `hrv below baseline decreases score below neutral`() {
-        val baseline = BaselineEngine.compute(List(20) { 50.0 })!!
+        val baseline = baselineAround(50.0)
         val result = RecoveryCalculator.calculate(
             today = snapshot(hrv = 30.0),
             yesterdaySleepScore = null,
@@ -64,7 +74,7 @@ class RecoveryCalculatorTest {
 
     @Test
     fun `higher resting heart rate than baseline is penalized`() {
-        val baseline = BaselineEngine.compute(List(20) { 55.0 })!!
+        val baseline = baselineAround(55.0)
         val result = RecoveryCalculator.calculate(
             today = snapshot(rhr = 75),
             yesterdaySleepScore = null,
@@ -76,7 +86,7 @@ class RecoveryCalculatorTest {
 
     @Test
     fun `more available signals increase confidence`() {
-        val baseline = BaselineEngine.compute(List(20) { 50.0 })!!
+        val baseline = baselineAround(50.0)
         val partial = RecoveryCalculator.calculate(
             today = snapshot(hrv = 50.0),
             yesterdaySleepScore = null,
@@ -97,7 +107,7 @@ class RecoveryCalculatorTest {
 
     @Test
     fun `score is always clamped between 0 and 100`() {
-        val baseline = BaselineEngine.compute(List(20) { 50.0 })!!
+        val baseline = baselineAround(50.0)
         val result = RecoveryCalculator.calculate(
             today = snapshot(hrv = 100000.0),
             yesterdaySleepScore = null,
