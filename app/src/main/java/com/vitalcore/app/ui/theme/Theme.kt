@@ -11,10 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColors = darkColorScheme(
-    primary = VitalGreen,
-    secondary = VitalBlue,
-    tertiary = VitalViolet,
-    error = VitalRed,
+    primary = RecoveryGreen,
+    secondary = StrainBlue,
+    tertiary = SleepPurple,
+    error = RecoveryRed,
     background = BackgroundDark,
     surface = SurfaceDark,
     surfaceVariant = SurfaceDarkElevated,
@@ -24,10 +24,10 @@ private val DarkColors = darkColorScheme(
 )
 
 private val LightColors = lightColorScheme(
-    primary = VitalGreen,
-    secondary = VitalBlue,
-    tertiary = VitalViolet,
-    error = VitalRed,
+    primary = RecoveryGreen,
+    secondary = StrainBlue,
+    tertiary = SleepPurple,
+    error = RecoveryRed,
     background = BackgroundLight,
     surface = SurfaceLight,
     surfaceVariant = SurfaceLightElevated,
@@ -37,12 +37,14 @@ private val LightColors = lightColorScheme(
 )
 
 /**
- * App-wide theme. Supports light/dark and, on Android 12+, dynamic color
- * (Material You) while always falling back to the VitalCore brand palette.
+ * App-wide theme. Defaults to the WHOOP-style dark palette regardless of the
+ * system setting (darkTheme defaults to true, not isSystemInDarkTheme()) to
+ * match the web dashboard's always-dark design; still overridable, and still
+ * supports Material You dynamic color on Android 12+ if ever enabled.
  */
 @Composable
 fun VitalCoreTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
