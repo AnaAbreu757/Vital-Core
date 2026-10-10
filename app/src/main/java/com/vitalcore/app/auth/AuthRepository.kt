@@ -39,10 +39,14 @@ sealed class SignInResult {
  */
 @Singleton
 class AuthRepository @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext private val appContext: Context,
 ) {
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    private val credentialManager by lazy { CredentialManager.create(context) }
+
+    // CredentialManager.create() itself is fine with any context, but the
+    // getCredential() call below needs an *Activity* context to actually show
+    // its bottom-sheet UI — that's a separate, per-call parameter (see below).
+    private val credentialManager by lazy { CredentialManager.create(appContext) }
 
     val currentUser: VitalCoreUser?
         get() = auth.currentUser?.let {
@@ -58,7 +62,14 @@ class AuthRepository @Inject constructor(
         awaitClose { auth.removeAuthStateListener(listener) }
     }
 
-    suspend fun signInWithGoogle(): SignInResult {
+    /**
+     * @param activityContext MUST be an Activity-based context (e.g. the
+     * Composable's `LocalContext.current` inside this app's single Activity).
+     * Passing an Application context here is the exact, documented cause of
+     * "Failed to launch the selector UI" — Credential Manager's bottom sheet
+     * can only attach to an Activity window.
+     */
+    suspend fun signInWithGoogle(activityContext: Context): SignInResult {
         if (BuildConfig.GOOGLE_WEB_CLIENT_ID.isBlank()) return SignInResult.NotConfigured
 
         val nonce = generateNonce()
@@ -68,7 +79,7 @@ class AuthRepository @Inject constructor(
         val request = GetCredentialRequest.Builder().addCredentialOption(option).build()
 
         return try {
-            val response = credentialManager.getCredential(context, request)
+            val response = credentialManager.getCredential(activityContext, request)
             val credential = response.credential
             if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)

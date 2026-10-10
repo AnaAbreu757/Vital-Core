@@ -1,5 +1,6 @@
 package com.vitalcore.app.ui.screens.account
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vitalcore.app.auth.AuthRepository
@@ -41,10 +42,11 @@ class AccountViewModel @Inject constructor(
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
 
-    fun signIn() {
+    /** [activityContext] must be an Activity context — see AuthRepository.signInWithGoogle kdoc. */
+    fun signIn(activityContext: Context) {
         _busy.value = true
         viewModelScope.launch {
-            when (val result = authRepository.signInWithGoogle()) {
+            when (val result = authRepository.signInWithGoogle(activityContext)) {
                 is SignInResult.Success -> {
                     _message.value = "Signed in as ${result.user.email ?: result.user.displayName}"
                     runCatching { profileRepository.publishProfileAndStats() }
