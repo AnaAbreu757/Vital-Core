@@ -67,7 +67,7 @@ class HealthDataRepository @Inject constructor(
         val activity = healthConnect.readDailyActivity(start, end)
         db.dailyActivityDao().upsert(
             DailyActivityEntity(
-                dateEpochDay = LocalDate.ofInstant(start, ZoneOffset.UTC).toEpochDay(),
+                dateEpochDay = start.atZone(ZoneOffset.UTC).toLocalDate().toEpochDay(),
                 steps = activity.steps,
                 activeCalories = activity.activeCalories,
                 totalCalories = activity.totalCalories,
