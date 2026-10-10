@@ -4,107 +4,85 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>VitalCore</title>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.13.0/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.13.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.13.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
 :root {
-  --bg: #000000;
-  --surface: #14161A;
-  --surface-2: #1E2127;
-  --border: #272A30;
-  --text: #F2F3F5;
-  --text-dim: #9AA1AD;
-  --text-faint: #5C6167;
-  --recovery-green: #16EC06;
-  --recovery-yellow: #FFDE00;
-  --recovery-red: #FF3B30;
-  --strain-blue: #00A3FF;
-  --sleep-purple: #9B8AFB;
-  box-sizing: border-box;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #000000; --surface: #14161A; --surface-2: #1E2127; --border: #272A30;
+  --text: #F2F3F5; --text-dim: #9AA1AD; --text-faint: #5C6167;
+  --recovery-green: #16EC06; --recovery-yellow: #FFDE00; --recovery-red: #FF3B30;
+  --strain-blue: #00A3FF; --sleep-purple: #9B8AFB;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
+body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
 .app { max-width: 520px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; }
 .content { flex: 1; padding: 0 16px 100px; }
-.topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 10px;
-}
-.topbar .icon-btn {
-  width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--text-faint);
-  display: flex; align-items: center; justify-content: center; color: var(--text-dim);
-  background: none; cursor: pointer;
-}
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 10px; }
+.topbar .icon-btn { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--text-faint); display: flex; align-items: center; justify-content: center; color: var(--text-dim); background: none; cursor: pointer; }
 .datepick { display: flex; align-items: center; gap: 10px; }
-.datepick .label {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text);
-}
-.datepick button { background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; padding: 4px; }
+.datepick .label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
 .sync-status { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-dim); }
 .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--recovery-green); }
-.tabs { display: flex; gap: 22px; padding: 4px 16px 18px; border-bottom: 1px solid var(--border); overflow-x: auto; }
-.tabs button {
-  background: none; border: none; color: var(--text-faint); font-size: 12px; font-weight: 700;
-  letter-spacing: 0.06em; text-transform: uppercase; padding: 0 0 10px; cursor: pointer; white-space: nowrap;
-  border-bottom: 2px solid transparent;
+.mode-switch { display: flex; gap: 6px; padding: 0 16px 16px; }
+.mode-switch button {
+  flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.03em; padding: 9px 6px; border-radius: 10px; cursor: pointer;
 }
-.tabs button.active { color: var(--text); border-bottom-color: var(--text); }
-.ring-section { display: flex; align-items: center; justify-content: center; gap: 26px; padding: 28px 10px 10px; }
+.mode-switch button.active { background: var(--surface-2); color: var(--text); border-color: var(--text-faint); }
+.ring-section { display: flex; align-items: center; justify-content: center; gap: 26px; padding: 22px 10px 10px; }
 .ring-stat { text-align: center; min-width: 64px; }
 .ring-stat .val { font-size: 22px; font-weight: 800; line-height: 1; }
 .ring-stat .lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--text-dim); text-transform: uppercase; margin-top: 4px; }
-.ring-wrap { position: relative; width: 190px; height: 190px; flex-shrink: 0; }
+.ring-wrap { position: relative; width: 180px; height: 180px; flex-shrink: 0; filter: drop-shadow(0 0 10px rgba(22,236,6,0.15)); }
 .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-wrap svg circle[id^="arc"], .ring-wrap svg circle[id^="lArc"] { filter: drop-shadow(0 0 4px currentColor); transition: stroke-dashoffset 0.7s cubic-bezier(.4,0,.2,1), stroke 0.3s; }
 .ring-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-.ring-center .brand { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
-.sub-stats { display: flex; justify-content: center; gap: 28px; padding: 2px 0 26px; font-size: 13px; color: var(--text-dim); }
+.ring-center .brand { font-size: 24px; font-weight: 800; letter-spacing: 0.02em; opacity: 0.45; }
+.status-line { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; font-size: 13.5px; line-height: 1.5; }
+.status-line .kicker { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 4px; }
+.sub-stats { display: flex; justify-content: center; gap: 24px; padding: 2px 0 22px; font-size: 13px; color: var(--text-dim); }
 .sub-stats b { color: var(--text); font-size: 14px; }
-.card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-  padding: 18px; margin-bottom: 14px;
-}
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
 .card-title { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
 .muted { color: var(--text-dim); font-size: 13px; line-height: 1.5; }
 .banner { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 12.5px; color: var(--text-dim); margin: 14px 16px; }
 .center { text-align: center; }
 .hidden { display: none !important; }
-.btn {
-  display: inline-flex; align-items: center; gap: 8px; background: var(--text); color: #000;
-  border: none; padding: 11px 18px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer;
-}
+.btn { display: inline-flex; align-items: center; gap: 8px; background: var(--text); color: #000; border: none; padding: 11px 18px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
 .btn.secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+.btn.block { width: 100%; justify-content: center; }
 .err { color: var(--recovery-red); font-size: 13px; }
+.ok { color: var(--recovery-green); font-size: 13px; }
 .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .stat { background: var(--surface-2); border-radius: 12px; padding: 14px 8px; text-align: center; }
 .stat .label { font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
 .stat .value { font-size: 24px; font-weight: 800; margin-top: 4px; }
 .stat.recovery .value { color: var(--recovery-green); }
-.stat.sleep .value { color: var(--strain-blue); }
-.stat.strain .value { color: var(--strain-blue); }
+.stat.sleep .value, .stat.strain .value { color: var(--strain-blue); }
 canvas { max-width: 100%; }
 .overflow-x { overflow-x: auto; }
-.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 11.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+.field input {
+  width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+  font-size: 15px; padding: 11px 12px; border-radius: 10px;
+}
+.field input:focus { outline: none; border-color: var(--strain-blue); }
+.row { display: flex; gap: 10px; }
+.row .field { flex: 1; }
 .bottomnav {
-  position: sticky; bottom: 0; left: 0; right: 0;
-  display: flex; justify-content: space-around; align-items: center;
-  background: rgba(10,10,12,0.92); backdrop-filter: blur(14px);
-  border-top: 1px solid var(--border);
+  position: sticky; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; align-items: center;
+  background: rgba(10,10,12,0.92); backdrop-filter: blur(14px); border-top: 1px solid var(--border);
   padding: 10px 6px calc(10px + env(safe-area-inset-bottom, 0px));
 }
 .bottomnav .navitem { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-faint); font-size: 10.5px; font-weight: 600; }
 .bottomnav .navitem.active { color: var(--text); }
 .bottomnav svg { width: 22px; height: 22px; }
+.small-link { background: none; border: none; color: var(--text-dim); font-size: 12.5px; text-decoration: underline; cursor: pointer; padding: 0; }
 </style>
 </head>
 <body>
@@ -114,124 +92,282 @@ canvas { max-width: 100%; }
     <button class="icon-btn" aria-label="profile">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
     </button>
-    <div class="datepick">
-      <button id="prevDay">&#8249;</button>
-      <span class="label" id="dateLabel">TODAY</span>
-      <button id="nextDay">&#8250;</button>
-    </div>
-    <div class="sync-status"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">&mdash;</span></div>
+    <div class="datepick"><span class="label" id="dateLabel">TODAY</span></div>
+    <div class="sync-status"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">Local</span></div>
   </div>
 
-  <div class="tabs">
-    <button class="active">Overview</button>
-    <button>Sleep</button>
-    <button>Recovery</button>
-    <button>Strain</button>
+  <div class="mode-switch">
+    <button id="tabLocal" class="active">Sem conta (local)</button>
+    <button id="tabCloud">Cloud (app Android)</button>
   </div>
 
   <div class="content">
 
-    <div class="banner">
-      Painel de leitura, separado da app Android. Mostra os scores que a app já fez backup
-      para a cloud (Settings → Conta → "Back up now"). Não lê o relógio diretamente —
-      isso só a app Android consegue, via Health Connect.
-    </div>
-
-    <div id="signedOutCard" class="card center">
-      <p class="muted" style="margin-top:0">Inicia sessão com a mesma conta Google que usas na app VitalCore.</p>
-      <button class="btn" id="signInBtn">Iniciar sessão com Google</button>
-      <p id="authError" class="err hidden" style="margin-top:12px"></p>
-    </div>
-
-    <div id="signedInArea" class="hidden">
-
-      <div id="loadingState" class="card center"><p class="muted">A carregar os teus dados…</p></div>
-
-      <div id="noDataState" class="card center hidden">
-        <p><strong>Ainda não há dados na cloud</strong></p>
-        <p class="muted">Abre a app VitalCore no telemóvel → Settings → Conta → "Back up now". Depois volta aqui e atualiza a página.</p>
+    <!-- ============ LOCAL MODE ============ -->
+    <div id="localMode">
+      <div class="banner">
+        Não existe nenhuma API web pública para ligar diretamente ao Google Health Connect ou
+        ao Apple Saúde — isso só é possível dentro de apps nativas. Aqui registas os números
+        à mão (podes vê-los no mostrador do relógio ou nas apps de saúde do telemóvel) e a
+        VitalCore calcula um Recovery real comparando com a tua média pessoal. Fica guardado
+        só neste browser.
       </div>
 
-      <div id="dataArea" class="hidden">
+      <div class="ring-section">
+        <div class="ring-stat"><div class="val" id="lRingRecovery" style="color:var(--recovery-green)">—</div><div class="lbl">Recovery</div></div>
+        <div class="ring-wrap">
+          <svg viewBox="0 0 180 180">
+            <circle cx="90" cy="90" r="78" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
+            <circle cx="90" cy="90" r="78" fill="none" stroke-width="10" stroke-linecap="round" id="lArcRecovery" stroke="var(--recovery-green)" stroke-dasharray="490" stroke-dashoffset="490"/>
+          </svg>
+          <div class="ring-center"><div class="brand">VC</div></div>
+        </div>
+        <div class="ring-stat"><div class="val" id="lRingSleep" style="color:var(--strain-blue)">—</div><div class="lbl">Sleep (h)</div></div>
+      </div>
+      <div class="sub-stats"><div id="lMaturityLabel">A recolher dados</div></div>
+      <div class="status-line" id="lStatusLine"></div>
 
-        <div class="ring-section">
-          <div class="ring-stat">
-            <div class="val" id="ringRecoveryVal" style="color:var(--recovery-green)">—</div>
-            <div class="lbl">Recovery</div>
+      <div class="card">
+        <div class="card-title">Registar hoje</div>
+        <div class="row">
+          <div class="field"><label>HRV (ms)</label><input type="number" id="inHrv" placeholder="ex: 52" inputmode="decimal"></div>
+          <div class="field"><label>FC repouso (bpm)</label><input type="number" id="inRhr" placeholder="ex: 58" inputmode="decimal"></div>
+        </div>
+        <div class="field"><label>Horas de sono</label><input type="number" id="inSleep" placeholder="ex: 7.5" step="0.1" inputmode="decimal"></div>
+        <button class="btn block" id="saveEntryBtn">Guardar hoje</button>
+        <p id="saveMsg" class="ok hidden" style="margin:10px 0 0;"></p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Key statistics</div>
+        <div class="stat-grid">
+          <div class="stat recovery"><div class="label">Recovery</div><div class="value" id="lLatestRecovery">—</div></div>
+          <div class="stat sleep"><div class="label">Sleep</div><div class="value" id="lLatestSleep">—</div></div>
+          <div class="stat strain"><div class="label">HRV</div><div class="value" id="lLatestHrv">—</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recovery — histórico</div>
+        <div class="overflow-x"><canvas id="lRecoveryChart" height="150"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">HRV &amp; FC repouso — histórico</div>
+        <div class="overflow-x"><canvas id="lHrvChart" height="150"></canvas></div>
+      </div>
+      <div class="card center">
+        <button class="small-link" id="clearLocalBtn">Apagar todos os dados locais</button>
+      </div>
+    </div>
+
+    <!-- ============ CLOUD MODE ============ -->
+    <div id="cloudMode" class="hidden">
+      <div class="banner">
+        Mostra os scores que a app Android já fez backup para a cloud (Settings → Conta →
+        "Back up now"). Precisas de ter instalado o APK pelo menos uma vez para gerar estes dados.
+      </div>
+      <div id="signedOutCard" class="card center">
+        <p class="muted" style="margin-top:0">Inicia sessão com a mesma conta Google que usas na app VitalCore.</p>
+        <button class="btn" id="signInBtn">Iniciar sessão com Google</button>
+        <p id="authError" class="err hidden" style="margin-top:12px"></p>
+      </div>
+      <div id="signedInArea" class="hidden">
+        <div id="loadingState" class="card center"><p class="muted">A carregar os teus dados…</p></div>
+        <div id="noDataState" class="card center hidden">
+          <p><strong>Ainda não há dados na cloud</strong></p>
+          <p class="muted">Abre a app VitalCore no telemóvel → Settings → Conta → "Back up now".</p>
+        </div>
+        <div id="dataArea" class="hidden">
+          <div class="ring-section">
+            <div class="ring-stat"><div class="val" id="ringRecoveryVal" style="color:var(--recovery-green)">—</div><div class="lbl">Recovery</div></div>
+            <div class="ring-wrap">
+              <svg viewBox="0 0 180 180">
+                <circle cx="90" cy="90" r="78" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
+                <circle cx="90" cy="90" r="78" fill="none" stroke-width="10" stroke-linecap="round" id="arcRecovery" stroke="var(--recovery-green)" stroke-dasharray="490" stroke-dashoffset="490"/>
+                <circle cx="90" cy="90" r="63" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
+                <circle cx="90" cy="90" r="63" fill="none" stroke-width="10" stroke-linecap="round" id="arcStrain" stroke="var(--strain-blue)" stroke-dasharray="395" stroke-dashoffset="395"/>
+              </svg>
+              <div class="ring-center"><div class="brand">VC</div></div>
+            </div>
+            <div class="ring-stat"><div class="val" id="ringStrainVal" style="color:var(--strain-blue)">—</div><div class="lbl">Strain</div></div>
           </div>
-          <div class="ring-wrap">
-            <svg viewBox="0 0 190 190">
-              <circle cx="95" cy="95" r="82" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
-              <circle cx="95" cy="95" r="82" fill="none" stroke-width="10" stroke-linecap="round"
-                id="arcRecovery" stroke="var(--recovery-green)" stroke-dasharray="515" stroke-dashoffset="515"/>
-              <circle cx="95" cy="95" r="66" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
-              <circle cx="95" cy="95" r="66" fill="none" stroke-width="10" stroke-linecap="round"
-                id="arcStrain" stroke="var(--strain-blue)" stroke-dasharray="415" stroke-dashoffset="415"/>
-            </svg>
-            <div class="ring-center">
-              <div class="brand">VC</div>
+          <div class="sub-stats"><div>Sleep <b id="ringSleepVal">—</b></div><div id="lastBackupLabel"></div></div>
+          <div class="status-line" id="cloudStatusLine"></div>
+          <div class="card">
+            <div class="card-title">Key statistics</div>
+            <div class="stat-grid">
+              <div class="stat recovery"><div class="label">Recovery</div><div class="value" id="latestRecovery">—</div></div>
+              <div class="stat sleep"><div class="label">Sleep</div><div class="value" id="latestSleep">—</div></div>
+              <div class="stat strain"><div class="label">Strain</div><div class="value" id="latestStrain">—</div></div>
             </div>
           </div>
-          <div class="ring-stat">
-            <div class="val" id="ringStrainVal" style="color:var(--strain-blue)">—</div>
-            <div class="lbl">Strain</div>
-          </div>
-        </div>
-        <div class="sub-stats">
-          <div>Sleep <b id="ringSleepVal">—</b></div>
-          <div id="lastBackupLabel"></div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Key statistics</div>
-          <div class="stat-grid">
-            <div class="stat recovery"><div class="label">Recovery</div><div class="value" id="latestRecovery">—</div></div>
-            <div class="stat sleep"><div class="label">Sleep</div><div class="value" id="latestSleep">—</div></div>
-            <div class="stat strain"><div class="label">Strain</div><div class="value" id="latestStrain">—</div></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Recovery — last 30 days</div>
-          <div class="overflow-x"><canvas id="recoveryChart" height="150"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Sleep — last 30 days</div>
-          <div class="overflow-x"><canvas id="sleepChart" height="150"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Strain — last 30 days</div>
-          <div class="overflow-x"><canvas id="strainChart" height="150"></canvas></div>
-        </div>
-
-        <div class="card center">
-          <button class="btn secondary" id="signOutBtn">Sair</button>
+          <div class="card"><div class="card-title">Recovery — last 30 days</div><div class="overflow-x"><canvas id="recoveryChart" height="150"></canvas></div></div>
+          <div class="card"><div class="card-title">Sleep — last 30 days</div><div class="overflow-x"><canvas id="sleepChart" height="150"></canvas></div></div>
+          <div class="card"><div class="card-title">Strain — last 30 days</div><div class="overflow-x"><canvas id="strainChart" height="150"></canvas></div></div>
+          <div class="card center"><button class="btn secondary" id="signOutBtn">Sair</button></div>
         </div>
       </div>
     </div>
   </div>
 
   <div class="bottomnav">
-    <div class="navitem active">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
-      Home
-    </div>
-    <div class="navitem">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v16"/></svg>
-      Coaching
-    </div>
-    <div class="navitem">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/></svg>
-      Community
-    </div>
-    <div class="navitem">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-      More
-    </div>
+    <div class="navitem active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</div>
+    <div class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v16"/></svg>Coaching</div>
+    <div class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/></svg>Community</div>
+    <div class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>More</div>
   </div>
 </div>
 
 <script>
+  const $ = (id) => document.getElementById(id);
+  const todayEpochDay = () => Math.floor(Date.now() / 86400000);
+  const tokenOf = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  function zoneColor(score) {
+    if (score >= 67) return tokenOf('--recovery-green');
+    if (score >= 34) return tokenOf('--recovery-yellow');
+    return tokenOf('--recovery-red');
+  }
+  $('dateLabel').textContent = new Date().toLocaleDateString('pt-PT', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
+
+  const LOCAL_KEY = 'vitalcore_local_entries_v1';
+  function loadLocal() { try { return JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]'); } catch { return []; } }
+  function saveLocal(entries) { localStorage.setItem(LOCAL_KEY, JSON.stringify(entries)); }
+
+  function zToGoodness(z, higherIsBetter, dampen) {
+    const signed = higherIsBetter ? z : -z;
+    const scale = dampen ? 3.0 : 2.0;
+    const clamped = Math.max(-scale, Math.min(scale, signed));
+    return 0.5 + (clamped / scale) * 0.5;
+  }
+  function baselineStats(values) {
+    if (values.length === 0) return null;
+    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+    const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length;
+    return { mean, sd: Math.sqrt(variance), n: values.length };
+  }
+  function deviation(stats, value) {
+    if (!stats || stats.sd <= 0) return null;
+    return (value - stats.mean) / stats.sd;
+  }
+
+  function computeLocalRecovery(entries, todayEntry) {
+    const history = entries.filter((e) => e.epochDay < todayEntry.epochDay).slice(-30);
+    const hrvHist = history.filter((e) => e.hrv != null).map((e) => e.hrv);
+    const rhrHist = history.filter((e) => e.rhr != null).map((e) => e.rhr);
+    const components = [];
+    if (todayEntry.hrv != null) {
+      const stats = baselineStats(hrvHist);
+      const z = stats ? deviation(stats, todayEntry.hrv) : null;
+      if (z != null) components.push(zToGoodness(z, true, false));
+    }
+    if (todayEntry.rhr != null) {
+      const stats = baselineStats(rhrHist);
+      const z = stats ? deviation(stats, todayEntry.rhr) : null;
+      if (z != null) components.push(zToGoodness(z, false, false));
+    }
+    if (components.length === 0) return { score: null, n: hrvHist.length };
+    const avg = components.reduce((a, b) => a + b, 0) / components.length;
+    return { score: Math.round(Math.max(0, Math.min(100, avg * 100))), n: hrvHist.length };
+  }
+
+  function setLocalRing(recoveryScore) {
+    const C = 2 * Math.PI * 78;
+    const arc = $('lArcRecovery');
+    const frac = recoveryScore != null ? Math.max(0, Math.min(1, recoveryScore / 100)) : 0;
+    arc.setAttribute('stroke-dasharray', String(C));
+    arc.setAttribute('stroke-dashoffset', String(C * (1 - frac)));
+    arc.setAttribute('stroke', recoveryScore != null ? zoneColor(recoveryScore) : '#2B2E34');
+  }
+
+  let localCharts = {};
+  function renderLineChart(canvasId, labels, values, color) {
+    const ctx = $(canvasId).getContext('2d');
+    if (localCharts[canvasId]) localCharts[canvasId].destroy();
+    localCharts[canvasId] = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: Array.isArray(color)
+        ? values.map((v, i) => ({ data: v, borderColor: color[i], backgroundColor: color[i] + '26', fill: false, tension: 0.35, pointRadius: 2 }))
+        : [{ data: values, borderColor: color, backgroundColor: color + '26', fill: true, tension: 0.35, pointRadius: 2 }] },
+      options: { responsive: true, plugins: { legend: { display: Array.isArray(color) } }, scales: {
+        x: { ticks: { maxTicksLimit: 6, color: '#9AA1AD' }, grid: { display: false } },
+        y: { ticks: { color: '#9AA1AD' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+      } },
+    });
+  }
+
+  function dayLabel(epochDay) { return new Date(epochDay * 86400000).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }); }
+
+  function statusLineHtml(recoveryScore, sleptWell) {
+    if (recoveryScore == null) return '<div class="kicker">Estado</div>Ainda sem Recovery calculado — regista mais alguns dias.';
+    const zone = recoveryScore >= 67 ? 'alta' : recoveryScore >= 34 ? 'média' : 'baixa';
+    let extra = '';
+    if (sleptWell === false) extra = ' Apesar do sono mais curto, a tua recuperação mantém-se — vale a pena dormir mais cedo hoje.';
+    else if (sleptWell === true) extra = ' O sono de ontem ajudou a sustentar este valor.';
+    return `<div class="kicker">Estado</div>Recovery em zona ${zone} (${recoveryScore}%).${extra}`;
+  }
+
+  function refreshLocalView() {
+    const entries = loadLocal().sort((a, b) => a.epochDay - b.epochDay);
+    const last = entries[entries.length - 1];
+    if (!last) {
+      $('lRingRecovery').textContent = '—'; $('lRingSleep').textContent = '—';
+      $('lLatestRecovery').textContent = '—'; $('lLatestSleep').textContent = '—'; $('lLatestHrv').textContent = '—';
+      $('lMaturityLabel').textContent = 'Regista o primeiro dia para começar';
+      setLocalRing(null);
+      return;
+    }
+    const rec = computeLocalRecovery(entries, last);
+    $('lRingRecovery').textContent = rec.score != null ? rec.score + '%' : '—';
+    if (rec.score != null) $('lRingRecovery').style.color = zoneColor(rec.score);
+    $('lRingSleep').textContent = last.sleepHours != null ? last.sleepHours : '—';
+    $('lLatestRecovery').textContent = rec.score != null ? rec.score : '—';
+    $('lLatestSleep').textContent = last.sleepHours != null ? last.sleepHours + 'h' : '—';
+    $('lLatestHrv').textContent = last.hrv != null ? last.hrv : '—';
+    $('lMaturityLabel').textContent = rec.n < 7
+      ? `A recolher dados (${rec.n}/7 dias de baseline)`
+      : rec.n < 14 ? 'Baseline inicial' : 'Baseline robusta';
+    setLocalRing(rec.score);
+    $('lStatusLine').innerHTML = statusLineHtml(rec.score, last.sleepHours != null ? last.sleepHours >= 7 : null);
+
+    const recent = entries.slice(-30);
+    const recoveryScores = recent.map((e) => {
+      const r = computeLocalRecovery(entries, e);
+      return r.score;
+    });
+    renderLineChart('lRecoveryChart', recent.map((e) => dayLabel(e.epochDay)), recoveryScores, '#16EC06');
+    renderLineChart('lHrvChart', recent.map((e) => dayLabel(e.epochDay)),
+      [recent.map((e) => e.hrv), recent.map((e) => e.rhr)], ['#16EC06', '#FF3B30']);
+  }
+
+  $('saveEntryBtn').addEventListener('click', () => {
+    const hrv = parseFloat($('inHrv').value); const rhr = parseFloat($('inRhr').value); const sleepHours = parseFloat($('inSleep').value);
+    if (isNaN(hrv) && isNaN(rhr) && isNaN(sleepHours)) {
+      $('saveMsg').textContent = 'Preenche pelo menos um valor.'; $('saveMsg').className = 'err'; $('saveMsg').classList.remove('hidden'); return;
+    }
+    const entries = loadLocal().filter((e) => e.epochDay !== todayEpochDay());
+    entries.push({ epochDay: todayEpochDay(), hrv: isNaN(hrv) ? null : hrv, rhr: isNaN(rhr) ? null : rhr, sleepHours: isNaN(sleepHours) ? null : sleepHours });
+    saveLocal(entries);
+    $('saveMsg').textContent = 'Guardado — obrigada!'; $('saveMsg').className = 'ok'; $('saveMsg').classList.remove('hidden');
+    $('inHrv').value = ''; $('inRhr').value = ''; $('inSleep').value = '';
+    refreshLocalView();
+  });
+  $('clearLocalBtn').addEventListener('click', () => {
+    if (confirm('Apagar todos os registos locais deste browser?')) { localStorage.removeItem(LOCAL_KEY); refreshLocalView(); }
+  });
+
+  $('tabLocal').addEventListener('click', () => {
+    $('tabLocal').classList.add('active'); $('tabCloud').classList.remove('active');
+    $('localMode').classList.remove('hidden'); $('cloudMode').classList.add('hidden');
+    $('syncLabel').textContent = 'Local';
+  });
+  $('tabCloud').addEventListener('click', () => {
+    $('tabCloud').classList.add('active'); $('tabLocal').classList.remove('active');
+    $('cloudMode').classList.remove('hidden'); $('localMode').classList.add('hidden');
+    $('syncLabel').textContent = auth.currentUser ? 'Sincronizado' : '—';
+  });
+
+  refreshLocalView();
+
   const firebaseConfig = {
     apiKey: "AIzaSyCv7JN3BQFnmHLV4hd2Uv6si4o9Euo78u4",
     authDomain: "vital-core-d5c30.firebaseapp.com",
@@ -243,19 +379,6 @@ canvas { max-width: 100%; }
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
-  const $ = (id) => document.getElementById(id);
-
-  function zoneColor(score) {
-    if (score >= 67) return getComputedStyle(document.documentElement).getPropertyValue('--recovery-green').trim();
-    if (score >= 34) return getComputedStyle(document.documentElement).getPropertyValue('--recovery-yellow').trim();
-    return getComputedStyle(document.documentElement).getPropertyValue('--recovery-red').trim();
-  }
-
-  function epochDayToDateLabel(epochDayStr) {
-    const epochDay = parseInt(epochDayStr, 10);
-    const d = new Date(epochDay * 86400000);
-    return d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' });
-  }
 
   function buildSeries(mapObj, field, limitDays) {
     const entries = Object.entries(mapObj || {})
@@ -263,49 +386,20 @@ canvas { max-width: 100%; }
       .filter((e) => typeof e.value === 'number' && !Number.isNaN(e.epochDay))
       .sort((a, b) => a.epochDay - b.epochDay);
     const recent = entries.slice(-limitDays);
-    return {
-      labels: recent.map((e) => epochDayToDateLabel(String(e.epochDay))),
-      values: recent.map((e) => e.value),
-      latest: recent.length ? recent[recent.length - 1].value : null,
-      latestEpochDay: recent.length ? recent[recent.length - 1].epochDay : null,
-    };
+    return { labels: recent.map((e) => dayLabel(e.epochDay)), values: recent.map((e) => e.value),
+      latest: recent.length ? recent[recent.length - 1].value : null, latestEpochDay: recent.length ? recent[recent.length - 1].epochDay : null };
   }
-
-  let charts = {};
-  function renderChart(canvasId, labels, values, color) {
-    const ctx = $(canvasId).getContext('2d');
-    if (charts[canvasId]) charts[canvasId].destroy();
-    charts[canvasId] = new Chart(ctx, {
-      type: 'line',
-      data: { labels, datasets: [{ data: values, borderColor: color, backgroundColor: color + '26', fill: true, tension: 0.35, pointRadius: 2 }] },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { maxTicksLimit: 6, color: '#9AA1AD' }, grid: { display: false } },
-          y: { ticks: { color: '#9AA1AD' }, grid: { color: 'rgba(255,255,255,0.06)' } },
-        },
-      },
-    });
-  }
-
-  function setRing(recoveryScore, strainScore) {
-    const rC = 2 * Math.PI * 82, sC = 2 * Math.PI * 66;
-    const recoveryArc = $('arcRecovery');
-    const strainArc = $('arcStrain');
+  function setCloudRing(recoveryScore, strainScore) {
+    const rC = 2 * Math.PI * 78, sC = 2 * Math.PI * 63;
+    const rArc = $('arcRecovery'), sArc = $('arcStrain');
     const rFrac = recoveryScore != null ? Math.max(0, Math.min(1, recoveryScore / 100)) : 0;
     const sFrac = strainScore != null ? Math.max(0, Math.min(1, strainScore / 21)) : 0;
-    recoveryArc.setAttribute('stroke-dasharray', String(rC));
-    recoveryArc.setAttribute('stroke-dashoffset', String(rC * (1 - rFrac)));
-    recoveryArc.setAttribute('stroke', recoveryScore != null ? zoneColor(recoveryScore) : '#2B2E34');
-    strainArc.setAttribute('stroke-dasharray', String(sC));
-    strainArc.setAttribute('stroke-dashoffset', String(sC * (1 - sFrac)));
+    rArc.setAttribute('stroke-dasharray', String(rC)); rArc.setAttribute('stroke-dashoffset', String(rC * (1 - rFrac)));
+    rArc.setAttribute('stroke', recoveryScore != null ? zoneColor(recoveryScore) : '#2B2E34');
+    sArc.setAttribute('stroke-dasharray', String(sC)); sArc.setAttribute('stroke-dashoffset', String(sC * (1 - sFrac)));
   }
-
-  async function loadData(uid) {
-    $('loadingState').classList.remove('hidden');
-    $('noDataState').classList.add('hidden');
-    $('dataArea').classList.add('hidden');
+  async function loadCloudData(uid) {
+    $('loadingState').classList.remove('hidden'); $('noDataState').classList.add('hidden'); $('dataArea').classList.add('hidden');
     $('syncLabel').textContent = 'A sincronizar';
     try {
       const userDoc = await db.collection('users').doc(uid).get();
@@ -316,45 +410,31 @@ canvas { max-width: 100%; }
       $('loadingState').classList.add('hidden');
       $('syncLabel').textContent = hasAny ? 'Sincronizado' : 'Sem dados';
       if (!hasAny) { $('noDataState').classList.remove('hidden'); return; }
-
       const recovery = buildSeries(recoveryDoc.data(), 'score', 30);
       const sleep = buildSeries(sleepDoc.data(), 'score', 30);
       const strain = buildSeries(strainDoc.data(), 'score', 30);
-
-      $('latestRecovery').textContent = recovery.latest ?? '—';
-      $('latestSleep').textContent = sleep.latest ?? '—';
-      $('latestStrain').textContent = strain.latest ?? '—';
+      $('latestRecovery').textContent = recovery.latest ?? '—'; $('latestSleep').textContent = sleep.latest ?? '—'; $('latestStrain').textContent = strain.latest ?? '—';
       $('ringRecoveryVal').textContent = recovery.latest != null ? recovery.latest + '%' : '—';
       $('ringStrainVal').textContent = strain.latest ?? '—';
       $('ringSleepVal').textContent = sleep.latest != null ? sleep.latest + '%' : '—';
       if (recovery.latest != null) $('ringRecoveryVal').style.color = zoneColor(recovery.latest);
-
-      setRing(recovery.latest, strain.latest);
-
+      setCloudRing(recovery.latest, strain.latest);
+      $('cloudStatusLine').innerHTML = statusLineHtml(recovery.latest, sleep.latest != null ? sleep.latest >= 67 : null);
       const lastBackupEpochDay = userDoc.exists ? userDoc.data().lastBackupEpochDay : null;
-      $('lastBackupLabel').textContent = lastBackupEpochDay ? `Backup: ${epochDayToDateLabel(String(lastBackupEpochDay))}` : '';
-      if (recovery.latestEpochDay != null) {
-        $('dateLabel').textContent = epochDayToDateLabel(String(recovery.latestEpochDay)).toUpperCase();
-      }
-
-      renderChart('recoveryChart', recovery.labels, recovery.values, '#16EC06');
-      renderChart('sleepChart', sleep.labels, sleep.values, '#00A3FF');
-      renderChart('strainChart', strain.labels, strain.values, '#00A3FF');
-
+      $('lastBackupLabel').textContent = lastBackupEpochDay ? `Backup: ${dayLabel(lastBackupEpochDay)}` : '';
+      renderLineChart('recoveryChart', recovery.labels, recovery.values, '#16EC06');
+      renderLineChart('sleepChart', sleep.labels, sleep.values, '#00A3FF');
+      renderLineChart('strainChart', strain.labels, strain.values, '#00A3FF');
       $('dataArea').classList.remove('hidden');
     } catch (e) {
-      $('loadingState').classList.add('hidden');
-      $('noDataState').classList.remove('hidden');
+      $('loadingState').classList.add('hidden'); $('noDataState').classList.remove('hidden');
       $('noDataState').querySelector('p').textContent = 'Erro ao carregar dados: ' + (e.message || e);
     }
   }
-
   $('signInBtn').addEventListener('click', async () => {
     $('authError').classList.add('hidden');
-    try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await auth.signInWithPopup(provider);
-    } catch (e) {
+    try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+    catch (e) {
       $('authError').textContent = (e && e.code === 'auth/unauthorized-domain')
         ? 'Este domínio ainda não está autorizado no Firebase (Authentication → Settings → Authorized domains).'
         : ('Erro ao iniciar sessão: ' + (e.message || e));
@@ -363,15 +443,8 @@ canvas { max-width: 100%; }
   });
   $('signOutBtn').addEventListener('click', () => auth.signOut());
   auth.onAuthStateChanged((user) => {
-    if (user) {
-      $('signedOutCard').classList.add('hidden');
-      $('signedInArea').classList.remove('hidden');
-      loadData(user.uid);
-    } else {
-      $('signedOutCard').classList.remove('hidden');
-      $('signedInArea').classList.add('hidden');
-      $('syncLabel').textContent = '—';
-    }
+    if (user) { $('signedOutCard').classList.add('hidden'); $('signedInArea').classList.remove('hidden'); loadCloudData(user.uid); }
+    else { $('signedOutCard').classList.remove('hidden'); $('signedInArea').classList.add('hidden'); if (!$('tabLocal').classList.contains('active')) $('syncLabel').textContent = '—'; }
   });
 </script>
 </body>
