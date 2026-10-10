@@ -71,7 +71,10 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            applicationIdSuffix = ".debug"
+            // No applicationIdSuffix: Google Sign-In verifies package name +
+            // signing certificate together against the Android OAuth client
+            // registered in Firebase/Google Cloud (com.vitalcore.app). A
+            // different package name here would fail that check.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
