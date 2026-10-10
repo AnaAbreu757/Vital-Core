@@ -45,6 +45,22 @@ android {
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${secret("GOOGLE_WEB_CLIENT_ID")}\"")
     }
 
+    // Fixed debug keystore (app/debug.keystore), committed to the repo on
+    // purpose: debug keystores aren't secret the way a release key is, and
+    // committing one guarantees every build — local or CI — produces the
+    // exact same signing fingerprint. Without this, Google Sign-In could
+    // never work reliably: Firebase matches by SHA-1, and the default
+    // auto-generated debug keystore is different on every machine/CI run.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = rootProject.file("app/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+            storeType = "PKCS12"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -56,6 +72,7 @@ android {
         debug {
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
