@@ -3,98 +3,234 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>VitalCore Web</title>
+<title>VitalCore</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #f7f8fa; --surface: #ffffff; --surface-2: #f1f3f6; --text: #15181d;
-    --text-dim: #6b7280; --border: #e5e7eb; --accent: #4f7cff; --accent-2: #22c08f; --accent-3: #ff7a59;
-    --danger: #e0453c;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #0f1115; --surface: #171a21; --surface-2: #1f232b; --text: #f2f3f5; --text-dim: #9aa1ad; --border: #272b33; }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 18px 60px; }
-  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
-  .brand { display: flex; align-items: center; gap: 10px; }
-  .brand .dot { width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
-  .brand h1 { font-size: 18px; margin: 0; letter-spacing: -0.01em; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-  .btn { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .btn.secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
-  .muted { color: var(--text-dim); font-size: 13px; line-height: 1.5; }
-  .center { text-align: center; }
-  .hidden { display: none !important; }
-  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 4px; }
-  .stat { background: var(--surface-2); border-radius: 12px; padding: 14px 10px; text-align: center; }
-  .stat .label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
-  .stat .value { font-size: 26px; font-weight: 700; margin-top: 4px; }
-  .stat.recovery .value { color: var(--accent-2); }
-  .stat.sleep .value { color: var(--accent); }
-  .stat.strain .value { color: var(--accent-3); }
-  .chart-title { font-size: 13px; font-weight: 600; color: var(--text-dim); margin: 18px 0 8px; }
-  canvas { max-width: 100%; }
-  .overflow-x { overflow-x: auto; }
-  .banner { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
-  .err { color: var(--danger); font-size: 13px; }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+:root {
+  --bg: #000000;
+  --surface: #14161A;
+  --surface-2: #1E2127;
+  --border: #272A30;
+  --text: #F2F3F5;
+  --text-dim: #9AA1AD;
+  --text-faint: #5C6167;
+  --recovery-green: #16EC06;
+  --recovery-yellow: #FFDE00;
+  --recovery-red: #FF3B30;
+  --strain-blue: #00A3FF;
+  --sleep-purple: #9B8AFB;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.app { max-width: 520px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; }
+.content { flex: 1; padding: 0 16px 100px; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 10px;
+}
+.topbar .icon-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--text-faint);
+  display: flex; align-items: center; justify-content: center; color: var(--text-dim);
+  background: none; cursor: pointer;
+}
+.datepick { display: flex; align-items: center; gap: 10px; }
+.datepick .label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text);
+}
+.datepick button { background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; padding: 4px; }
+.sync-status { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-dim); }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--recovery-green); }
+.tabs { display: flex; gap: 22px; padding: 4px 16px 18px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+.tabs button {
+  background: none; border: none; color: var(--text-faint); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; padding: 0 0 10px; cursor: pointer; white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+.tabs button.active { color: var(--text); border-bottom-color: var(--text); }
+.ring-section { display: flex; align-items: center; justify-content: center; gap: 26px; padding: 28px 10px 10px; }
+.ring-stat { text-align: center; min-width: 64px; }
+.ring-stat .val { font-size: 22px; font-weight: 800; line-height: 1; }
+.ring-stat .lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--text-dim); text-transform: uppercase; margin-top: 4px; }
+.ring-wrap { position: relative; width: 190px; height: 190px; flex-shrink: 0; }
+.ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+.ring-center .brand { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+.sub-stats { display: flex; justify-content: center; gap: 28px; padding: 2px 0 26px; font-size: 13px; color: var(--text-dim); }
+.sub-stats b { color: var(--text); font-size: 14px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px; margin-bottom: 14px;
+}
+.card-title { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+.muted { color: var(--text-dim); font-size: 13px; line-height: 1.5; }
+.banner { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 12.5px; color: var(--text-dim); margin: 14px 16px; }
+.center { text-align: center; }
+.hidden { display: none !important; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; background: var(--text); color: #000;
+  border: none; padding: 11px 18px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.btn.secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+.err { color: var(--recovery-red); font-size: 13px; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat { background: var(--surface-2); border-radius: 12px; padding: 14px 8px; text-align: center; }
+.stat .label { font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+.stat .value { font-size: 24px; font-weight: 800; margin-top: 4px; }
+.stat.recovery .value { color: var(--recovery-green); }
+.stat.sleep .value { color: var(--strain-blue); }
+.stat.strain .value { color: var(--strain-blue); }
+canvas { max-width: 100%; }
+.overflow-x { overflow-x: auto; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.bottomnav {
+  position: sticky; bottom: 0; left: 0; right: 0;
+  display: flex; justify-content: space-around; align-items: center;
+  background: rgba(10,10,12,0.92); backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+  padding: 10px 6px calc(10px + env(safe-area-inset-bottom, 0px));
+}
+.bottomnav .navitem { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-faint); font-size: 10.5px; font-weight: 600; }
+.bottomnav .navitem.active { color: var(--text); }
+.bottomnav svg { width: 22px; height: 22px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div class="brand"><div class="dot"></div><h1>VitalCore Web</h1></div>
+<div class="app">
+
+  <div class="topbar">
+    <button class="icon-btn" aria-label="profile">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+    </button>
+    <div class="datepick">
+      <button id="prevDay">&#8249;</button>
+      <span class="label" id="dateLabel">TODAY</span>
+      <button id="nextDay">&#8250;</button>
+    </div>
+    <div class="sync-status"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">&mdash;</span></div>
   </div>
-  <div class="banner">
-    Painel de leitura, separado da app Android. Mostra os scores que a app já fez
-    backup para a cloud (Settings → Conta → "Back up now"). Não lê o relógio
-    diretamente — isso só a app Android consegue, via Health Connect.
+
+  <div class="tabs">
+    <button class="active">Overview</button>
+    <button>Sleep</button>
+    <button>Recovery</button>
+    <button>Strain</button>
   </div>
-  <div id="signedOutCard" class="card center">
-    <p class="muted" style="margin-top:0">Inicia sessão com a mesma conta Google que usas na app VitalCore.</p>
-    <button class="btn" id="signInBtn">Iniciar sessão com Google</button>
-    <p id="authError" class="err hidden" style="margin-top:12px"></p>
-  </div>
-  <div id="signedInArea" class="hidden">
-    <div class="card">
-      <div class="row" style="justify-content: space-between;">
-        <div>
-          <div style="font-weight:600" id="userName">—</div>
-          <div class="muted" id="userEmail">—</div>
+
+  <div class="content">
+
+    <div class="banner">
+      Painel de leitura, separado da app Android. Mostra os scores que a app já fez backup
+      para a cloud (Settings → Conta → "Back up now"). Não lê o relógio diretamente —
+      isso só a app Android consegue, via Health Connect.
+    </div>
+
+    <div id="signedOutCard" class="card center">
+      <p class="muted" style="margin-top:0">Inicia sessão com a mesma conta Google que usas na app VitalCore.</p>
+      <button class="btn" id="signInBtn">Iniciar sessão com Google</button>
+      <p id="authError" class="err hidden" style="margin-top:12px"></p>
+    </div>
+
+    <div id="signedInArea" class="hidden">
+
+      <div id="loadingState" class="card center"><p class="muted">A carregar os teus dados…</p></div>
+
+      <div id="noDataState" class="card center hidden">
+        <p><strong>Ainda não há dados na cloud</strong></p>
+        <p class="muted">Abre a app VitalCore no telemóvel → Settings → Conta → "Back up now". Depois volta aqui e atualiza a página.</p>
+      </div>
+
+      <div id="dataArea" class="hidden">
+
+        <div class="ring-section">
+          <div class="ring-stat">
+            <div class="val" id="ringRecoveryVal" style="color:var(--recovery-green)">—</div>
+            <div class="lbl">Recovery</div>
+          </div>
+          <div class="ring-wrap">
+            <svg viewBox="0 0 190 190">
+              <circle cx="95" cy="95" r="82" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
+              <circle cx="95" cy="95" r="82" fill="none" stroke-width="10" stroke-linecap="round"
+                id="arcRecovery" stroke="var(--recovery-green)" stroke-dasharray="515" stroke-dashoffset="515"/>
+              <circle cx="95" cy="95" r="66" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
+              <circle cx="95" cy="95" r="66" fill="none" stroke-width="10" stroke-linecap="round"
+                id="arcStrain" stroke="var(--strain-blue)" stroke-dasharray="415" stroke-dashoffset="415"/>
+            </svg>
+            <div class="ring-center">
+              <div class="brand">VC</div>
+            </div>
+          </div>
+          <div class="ring-stat">
+            <div class="val" id="ringStrainVal" style="color:var(--strain-blue)">—</div>
+            <div class="lbl">Strain</div>
+          </div>
         </div>
-        <button class="btn secondary" id="signOutBtn">Sair</button>
+        <div class="sub-stats">
+          <div>Sleep <b id="ringSleepVal">—</b></div>
+          <div id="lastBackupLabel"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Key statistics</div>
+          <div class="stat-grid">
+            <div class="stat recovery"><div class="label">Recovery</div><div class="value" id="latestRecovery">—</div></div>
+            <div class="stat sleep"><div class="label">Sleep</div><div class="value" id="latestSleep">—</div></div>
+            <div class="stat strain"><div class="label">Strain</div><div class="value" id="latestStrain">—</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Recovery — last 30 days</div>
+          <div class="overflow-x"><canvas id="recoveryChart" height="150"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Sleep — last 30 days</div>
+          <div class="overflow-x"><canvas id="sleepChart" height="150"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Strain — last 30 days</div>
+          <div class="overflow-x"><canvas id="strainChart" height="150"></canvas></div>
+        </div>
+
+        <div class="card center">
+          <button class="btn secondary" id="signOutBtn">Sair</button>
+        </div>
       </div>
     </div>
-    <div id="loadingState" class="card center"><p class="muted">A carregar os teus dados…</p></div>
-    <div id="noDataState" class="card center hidden">
-      <p><strong>Ainda não há dados na cloud</strong></p>
-      <p class="muted">Abre a app VitalCore no telemóvel → Settings → Conta → "Back up now". Depois volta aqui e atualiza a página.</p>
+  </div>
+
+  <div class="bottomnav">
+    <div class="navitem active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      Home
     </div>
-    <div id="dataArea" class="hidden">
-      <div class="card">
-        <div class="stat-grid">
-          <div class="stat recovery"><div class="label">Recovery</div><div class="value" id="latestRecovery">—</div></div>
-          <div class="stat sleep"><div class="label">Sleep</div><div class="value" id="latestSleep">—</div></div>
-          <div class="stat strain"><div class="label">Strain</div><div class="value" id="latestStrain">—</div></div>
-        </div>
-        <p class="muted" id="lastBackupLabel" style="margin-bottom:0; margin-top:12px;"></p>
-      </div>
-      <div class="card">
-        <div class="chart-title">Recovery (últimos 30 dias)</div>
-        <div class="overflow-x"><canvas id="recoveryChart" height="160"></canvas></div>
-        <div class="chart-title">Sleep (últimos 30 dias)</div>
-        <div class="overflow-x"><canvas id="sleepChart" height="160"></canvas></div>
-        <div class="chart-title">Strain (últimos 30 dias)</div>
-        <div class="overflow-x"><canvas id="strainChart" height="160"></canvas></div>
-      </div>
+    <div class="navitem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v16"/></svg>
+      Coaching
+    </div>
+    <div class="navitem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/></svg>
+      Community
+    </div>
+    <div class="navitem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      More
     </div>
   </div>
 </div>
+
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyCv7JN3BQFnmHLV4hd2Uv6si4o9Euo78u4",
@@ -108,6 +244,12 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
   const $ = (id) => document.getElementById(id);
+
+  function zoneColor(score) {
+    if (score >= 67) return getComputedStyle(document.documentElement).getPropertyValue('--recovery-green').trim();
+    if (score >= 34) return getComputedStyle(document.documentElement).getPropertyValue('--recovery-yellow').trim();
+    return getComputedStyle(document.documentElement).getPropertyValue('--recovery-red').trim();
+  }
 
   function epochDayToDateLabel(epochDayStr) {
     const epochDay = parseInt(epochDayStr, 10);
@@ -125,6 +267,7 @@
       labels: recent.map((e) => epochDayToDateLabel(String(e.epochDay))),
       values: recent.map((e) => e.value),
       latest: recent.length ? recent[recent.length - 1].value : null,
+      latestEpochDay: recent.length ? recent[recent.length - 1].epochDay : null,
     };
   }
 
@@ -134,15 +277,36 @@
     if (charts[canvasId]) charts[canvasId].destroy();
     charts[canvasId] = new Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [{ data: values, borderColor: color, backgroundColor: color + '33', fill: true, tension: 0.35, pointRadius: 2 }] },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 6 }, grid: { display: false } }, y: { grid: { color: 'rgba(128,128,128,0.15)' } } } },
+      data: { labels, datasets: [{ data: values, borderColor: color, backgroundColor: color + '26', fill: true, tension: 0.35, pointRadius: 2 }] },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { maxTicksLimit: 6, color: '#9AA1AD' }, grid: { display: false } },
+          y: { ticks: { color: '#9AA1AD' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+        },
+      },
     });
+  }
+
+  function setRing(recoveryScore, strainScore) {
+    const rC = 2 * Math.PI * 82, sC = 2 * Math.PI * 66;
+    const recoveryArc = $('arcRecovery');
+    const strainArc = $('arcStrain');
+    const rFrac = recoveryScore != null ? Math.max(0, Math.min(1, recoveryScore / 100)) : 0;
+    const sFrac = strainScore != null ? Math.max(0, Math.min(1, strainScore / 21)) : 0;
+    recoveryArc.setAttribute('stroke-dasharray', String(rC));
+    recoveryArc.setAttribute('stroke-dashoffset', String(rC * (1 - rFrac)));
+    recoveryArc.setAttribute('stroke', recoveryScore != null ? zoneColor(recoveryScore) : '#2B2E34');
+    strainArc.setAttribute('stroke-dasharray', String(sC));
+    strainArc.setAttribute('stroke-dashoffset', String(sC * (1 - sFrac)));
   }
 
   async function loadData(uid) {
     $('loadingState').classList.remove('hidden');
     $('noDataState').classList.add('hidden');
     $('dataArea').classList.add('hidden');
+    $('syncLabel').textContent = 'A sincronizar';
     try {
       const userDoc = await db.collection('users').doc(uid).get();
       const recoveryDoc = await db.collection('users').doc(uid).collection('scores').doc('recovery').get();
@@ -150,18 +314,33 @@
       const strainDoc = await db.collection('users').doc(uid).collection('scores').doc('strain').get();
       const hasAny = recoveryDoc.exists || sleepDoc.exists || strainDoc.exists;
       $('loadingState').classList.add('hidden');
+      $('syncLabel').textContent = hasAny ? 'Sincronizado' : 'Sem dados';
       if (!hasAny) { $('noDataState').classList.remove('hidden'); return; }
+
       const recovery = buildSeries(recoveryDoc.data(), 'score', 30);
       const sleep = buildSeries(sleepDoc.data(), 'score', 30);
       const strain = buildSeries(strainDoc.data(), 'score', 30);
+
       $('latestRecovery').textContent = recovery.latest ?? '—';
       $('latestSleep').textContent = sleep.latest ?? '—';
       $('latestStrain').textContent = strain.latest ?? '—';
+      $('ringRecoveryVal').textContent = recovery.latest != null ? recovery.latest + '%' : '—';
+      $('ringStrainVal').textContent = strain.latest ?? '—';
+      $('ringSleepVal').textContent = sleep.latest != null ? sleep.latest + '%' : '—';
+      if (recovery.latest != null) $('ringRecoveryVal').style.color = zoneColor(recovery.latest);
+
+      setRing(recovery.latest, strain.latest);
+
       const lastBackupEpochDay = userDoc.exists ? userDoc.data().lastBackupEpochDay : null;
-      $('lastBackupLabel').textContent = lastBackupEpochDay ? `Último backup: ${epochDayToDateLabel(String(lastBackupEpochDay))}` : '';
-      renderChart('recoveryChart', recovery.labels, recovery.values, '#22c08f');
-      renderChart('sleepChart', sleep.labels, sleep.values, '#4f7cff');
-      renderChart('strainChart', strain.labels, strain.values, '#ff7a59');
+      $('lastBackupLabel').textContent = lastBackupEpochDay ? `Backup: ${epochDayToDateLabel(String(lastBackupEpochDay))}` : '';
+      if (recovery.latestEpochDay != null) {
+        $('dateLabel').textContent = epochDayToDateLabel(String(recovery.latestEpochDay)).toUpperCase();
+      }
+
+      renderChart('recoveryChart', recovery.labels, recovery.values, '#16EC06');
+      renderChart('sleepChart', sleep.labels, sleep.values, '#00A3FF');
+      renderChart('strainChart', strain.labels, strain.values, '#00A3FF');
+
       $('dataArea').classList.remove('hidden');
     } catch (e) {
       $('loadingState').classList.add('hidden');
@@ -187,12 +366,11 @@
     if (user) {
       $('signedOutCard').classList.add('hidden');
       $('signedInArea').classList.remove('hidden');
-      $('userName').textContent = user.displayName || 'VitalCore';
-      $('userEmail').textContent = user.email || '';
       loadData(user.uid);
     } else {
       $('signedOutCard').classList.remove('hidden');
       $('signedInArea').classList.add('hidden');
+      $('syncLabel').textContent = '—';
     }
   });
 </script>
