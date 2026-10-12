@@ -101,6 +101,7 @@ private fun MainScaffold() {
                     onOpenNutrition = { navController.navigate(ROUTE_NUTRITION) },
                     onOpenStreak = { navController.navigate(ROUTE_STREAK) },
                     onOpenFriends = { navController.navigate(ROUTE_FRIENDS) },
+                    onOpenSettings = { navController.navigate(VitalCoreDestination.Settings.route) },
                 )
             }
             composable(VitalCoreDestination.Recovery.route) { RecoveryScreen() }
