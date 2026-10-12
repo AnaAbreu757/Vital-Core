@@ -1,5 +1,7 @@
 package com.vitalcore.app.ui.screens.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,13 +25,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vitalcore.app.ai.AiConfig
+import com.vitalcore.app.ui.components.ProfileAvatar
 import com.vitalcore.app.ui.screens.account.AccountViewModel
+import com.vitalcore.app.ui.screens.account.ProfileViewModel
 import com.vitalcore.app.ui.screens.connections.ConnectionsSection
+import java.io.File
 
 /**
  * Real Settings/Privacy screen (Milestone 12): notification toggles wired to
@@ -53,6 +59,8 @@ fun SettingsScreen(
         item { Text("Settings", style = MaterialTheme.typography.headlineMedium) }
 
         item { AccountSection() }
+
+        item { ProfileCard() }
 
         item { ConnectionsSection(onOpenAppleHealthImport = onOpenAppleHealthImport) }
 
@@ -155,6 +163,73 @@ private fun AccountSection(viewModel: AccountViewModel = hiltViewModel()) {
                 Button(onClick = { viewModel.signIn(context) }, enabled = !busy) { Text("Sign in with Google") }
             }
             message?.let { Text(it, style = MaterialTheme.typography.labelMedium) }
+        }
+    }
+}
+
+/**
+ * Profile photo (local pick, overrides the Google account photo) + height,
+ * weight, and birth year. These measurements aren't fed into the
+ * calculation engine yet (e.g. a real max-HR for Strain still uses a
+ * neutral default) — they're captured here ready for that follow-up.
+ */
+@Composable
+private fun ProfileCard(viewModel: ProfileViewModel = hiltViewModel()) {
+    val context = LocalContext.current
+    val profile by viewModel.profile.collectAsState()
+    var height by remember(profile.heightCm) { mutableStateOf(profile.heightCm?.toString() ?: "") }
+    var weight by remember(profile.weightKg) { mutableStateOf(profile.weightKg?.toString() ?: "") }
+    var birthYear by remember(profile.birthYear) { mutableStateOf(profile.birthYear?.toString() ?: "") }
+
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val dest = File(context.filesDir, "profile_photo.jpg")
+        runCatching {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                dest.outputStream().use { output -> input.copyTo(output) }
+            }
+        }
+        viewModel.setPhotoPath(dest.absolutePath)
+    }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Profile", style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                ProfileAvatar(
+                    photoPath = profile.photoPath,
+                    fallbackUrl = viewModel.googlePhotoUrl,
+                    size = 60.dp,
+                    onClick = { photoPicker.launch("image/*") },
+                )
+                Text("Tap the photo to change it", style = MaterialTheme.typography.bodyMedium)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = height,
+                    onValueChange = { height = it },
+                    label = { Text("Height (cm)") },
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedTextField(
+                    value = weight,
+                    onValueChange = { weight = it },
+                    label = { Text("Weight (kg)") },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            OutlinedTextField(
+                value = birthYear,
+                onValueChange = { birthYear = it },
+                label = { Text("Birth year") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            profile.estimatedMaxHeartRate?.let {
+                Text("Estimated max heart rate: $it bpm (220 − age)", style = MaterialTheme.typography.labelMedium)
+            }
+            Button(onClick = {
+                viewModel.setMeasurements(height.toFloatOrNull(), weight.toFloatOrNull(), birthYear.toIntOrNull())
+            }) { Text("Save profile") }
         }
     }
 }
