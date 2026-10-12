@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.vitalcore.app.ui.components.ProfileAvatar
+import com.vitalcore.app.ui.screens.account.ProfileViewModel
 import com.vitalcore.app.ui.theme.OnSurfaceMutedDark
 import com.vitalcore.app.ui.theme.RecoveryGreen
 import com.vitalcore.app.ui.theme.RecoveryRed
@@ -70,12 +72,15 @@ import kotlin.math.roundToInt
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
+    profileViewModel: ProfileViewModel = hiltViewModel(),
     onOpenAiCoach: () -> Unit = {},
     onOpenNutrition: () -> Unit = {},
     onOpenStreak: () -> Unit = {},
     onOpenFriends: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
+    val profile by profileViewModel.profile.collectAsState()
 
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnResume = rememberUpdatedState(viewModel::refresh)
@@ -103,7 +108,15 @@ fun HomeScreen(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        item { TopBar(refreshing = state.refreshing, onRefresh = viewModel::refresh) }
+        item {
+            TopBar(
+                photoPath = profile.photoPath,
+                fallbackPhotoUrl = profileViewModel.googlePhotoUrl,
+                onAvatarClick = onOpenSettings,
+                refreshing = state.refreshing,
+                onRefresh = viewModel::refresh,
+            )
+        }
 
         item {
             Row(
@@ -187,17 +200,23 @@ fun HomeScreen(
 }
 
 @Composable
-private fun TopBar(refreshing: Boolean, onRefresh: () -> Unit) {
+private fun TopBar(
+    photoPath: String?,
+    fallbackPhotoUrl: String?,
+    onAvatarClick: () -> Unit,
+    refreshing: Boolean,
+    onRefresh: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(SurfaceDarkElevated),
+        ProfileAvatar(
+            photoPath = photoPath,
+            fallbackUrl = fallbackPhotoUrl,
+            size = 34.dp,
+            onClick = onAvatarClick,
         )
         Text("TODAY", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         if (refreshing) {
@@ -231,7 +250,6 @@ private fun RingGauge(label: String, display: String, fraction: Float, color: Co
                 val topLeft = androidx.compose.ui.geometry.Offset(stroke / 2, stroke / 2)
                 val arcSize = Size(size.width - stroke, size.height - stroke)
 
-                // background track
                 drawArc(
                     color = SurfaceDarkElevated,
                     startAngle = -90f,
@@ -241,7 +259,6 @@ private fun RingGauge(label: String, display: String, fraction: Float, color: Co
                     size = arcSize,
                     style = Stroke(stroke, cap = StrokeCap.Round),
                 )
-                // soft glow: a few wider, fainter passes behind the main arc
                 for (i in 3 downTo 1) {
                     drawArc(
                         color = color.copy(alpha = 0.08f * i),
