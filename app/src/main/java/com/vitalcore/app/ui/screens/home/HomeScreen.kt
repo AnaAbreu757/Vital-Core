@@ -118,6 +118,21 @@ fun HomeScreen(
             )
         }
 
+        state.error?.let { err ->
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = RecoveryRed.copy(alpha = 0.15f)),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Refresh failed", style = MaterialTheme.typography.labelMedium, color = RecoveryRed)
+                        Text(err, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                    }
+                }
+            }
+        }
+
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
