@@ -80,6 +80,27 @@ class HealthDataRepository @Inject constructor(
         db.vitalsDao().insertBloodPressure(healthConnect.readBloodPressure(start, end).map { BloodPressureEntity(it.time.toEpochMilli(), it.systolic, it.diastolic) })
     }
 
+    /**
+     * Estimates a resting heart rate from raw BPM samples when no dedicated
+     * RestingHeartRateRecord exists for the day (see this file's commit
+     * message / HealthConnectManager kdoc for why some data sources —
+     * notably Google Fit bridged through Health Connect — only ever provide
+     * raw continuous readings, never the derived record type). Uses the
+     * average of the lowest 10% of the day's samples: resting HR tracks a
+     * person's sustained low readings, not their single lowest spike, which
+     * is often sensor noise.
+     *
+     * This is a reasonable estimate, not a substitute for a device/app that
+     * actually computes true resting heart rate — it's offered so Recovery
+     * has *something* to work with rather than staying blank indefinitely.
+     */
+    private fun estimateRestingHeartRate(rawSamples: List<HeartRateSampleEntity>): Int? {
+        if (rawSamples.size < 5) return null // too few points for a stable estimate
+        val lowestCount = (rawSamples.size * 0.1).toInt().coerceAtLeast(3)
+        val lowestBpms = rawSamples.map { it.bpm }.sorted().take(lowestCount)
+        return lowestBpms.average().toInt()
+    }
+
     /** Builds the normalized snapshot the calculation engines consume for one calendar day (UTC). */
     suspend fun snapshotForDay(day: LocalDate): DailyHealthSnapshot {
         val start = day.atStartOfDay(ZoneOffset.UTC).toInstant()
@@ -87,6 +108,10 @@ class HealthDataRepository @Inject constructor(
 
         val hrv = db.hrvDao().between(start.toEpochMilli(), end.toEpochMilli())
         val rhr = db.restingHeartRateDao().between(start.toEpochMilli(), end.toEpochMilli())
+        val rawHeartRate = db.heartRateDao().between(start.toEpochMilli(), end.toEpochMilli())
+        val restingHeartRateBpm = rhr.map { it.bpm }.average().takeIf { !it.isNaN() }?.toInt()
+            ?: estimateRestingHeartRate(rawHeartRate)
+
         val sleepEntity = db.sleepDao().sessionsBetween(start.toEpochMilli(), end.toEpochMilli()).maxByOrNull {
             it.endEpochMillis - it.startEpochMillis
         }
@@ -118,8 +143,13 @@ class HealthDataRepository @Inject constructor(
 
         return DailyHealthSnapshot(
             date = start,
+            // Real HRV (RMSSD) needs beat-to-beat R-R interval timing, which
+            // basic/consumer optical sensors generally can't produce at all —
+            // there's no honest fallback here the way there is for resting HR,
+            // so this stays null unless a real HeartRateVariabilityRmssdRecord
+            // exists.
             avgHrvMillis = hrv.map { it.rmssdMillis }.average().takeIf { !it.isNaN() },
-            restingHeartRateBpm = rhr.map { it.bpm }.average().takeIf { !it.isNaN() }?.toInt(),
+            restingHeartRateBpm = restingHeartRateBpm,
             sleep = sleep,
             respiratoryRateBpm = respiratory.map { it.breathsPerMinute }.average().takeIf { !it.isNaN() },
             avgSpo2Percentage = spo2.map { it.percentage }.average().takeIf { !it.isNaN() },
