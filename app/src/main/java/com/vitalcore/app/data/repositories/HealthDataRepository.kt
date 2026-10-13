@@ -10,6 +10,8 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * The single source of truth for health data from the domain layer's point of
@@ -82,23 +84,38 @@ class HealthDataRepository @Inject constructor(
 
     /**
      * Estimates a resting heart rate from raw BPM samples when no dedicated
-     * RestingHeartRateRecord exists for the day (see this file's commit
-     * message / HealthConnectManager kdoc for why some data sources —
-     * notably Google Fit bridged through Health Connect — only ever provide
-     * raw continuous readings, never the derived record type). Uses the
-     * average of the lowest 10% of the day's samples: resting HR tracks a
-     * person's sustained low readings, not their single lowest spike, which
-     * is often sensor noise.
-     *
-     * This is a reasonable estimate, not a substitute for a device/app that
-     * actually computes true resting heart rate — it's offered so Recovery
-     * has *something* to work with rather than staying blank indefinitely.
+     * RestingHeartRateRecord exists for the day (some data sources — notably
+     * Google Fit bridged through Health Connect — only ever provide raw
+     * continuous readings, never the derived record type). Uses the average
+     * of the lowest 10% of the day's samples: resting HR tracks a person's
+     * sustained low readings, not their single lowest spike, which is often
+     * sensor noise.
      */
     private fun estimateRestingHeartRate(rawSamples: List<HeartRateSampleEntity>): Int? {
         if (rawSamples.size < 5) return null // too few points for a stable estimate
         val lowestCount = (rawSamples.size * 0.1).toInt().coerceAtLeast(3)
         val lowestBpms = rawSamples.map { it.bpm }.sorted().take(lowestCount)
         return lowestBpms.average().toInt()
+    }
+
+    /**
+     * Estimates HRV from raw BPM samples when no dedicated
+     * HeartRateVariabilityRmssdRecord exists. This is a coarser approximation
+     * than true RMSSD HRV (which needs beat-to-beat R-R interval timing from
+     * a continuous waveform): it converts each BPM sample to an *average* R-R
+     * interval (60000/bpm) and takes the standard deviation across the day's
+     * samples — closer to a rough SDNN-style spread than true RMSSD, and
+     * limited by how frequently samples were actually taken. Still a
+     * reasonable signal when that's genuinely all the data source provides
+     * (e.g. a consumer PPG band whose own app shows an HRV-like number but
+     * doesn't write the dedicated record type to Health Connect).
+     */
+    private fun estimateHrvMillis(rawSamples: List<HeartRateSampleEntity>): Double? {
+        if (rawSamples.size < 10) return null // too few points for a stable estimate
+        val rrIntervalsMs = rawSamples.map { 60000.0 / it.bpm }
+        val mean = rrIntervalsMs.average()
+        val variance = rrIntervalsMs.sumOf { (it - mean).pow(2) } / rrIntervalsMs.size
+        return sqrt(variance)
     }
 
     /** Builds the normalized snapshot the calculation engines consume for one calendar day (UTC). */
@@ -109,8 +126,11 @@ class HealthDataRepository @Inject constructor(
         val hrv = db.hrvDao().between(start.toEpochMilli(), end.toEpochMilli())
         val rhr = db.restingHeartRateDao().between(start.toEpochMilli(), end.toEpochMilli())
         val rawHeartRate = db.heartRateDao().between(start.toEpochMilli(), end.toEpochMilli())
+
         val restingHeartRateBpm = rhr.map { it.bpm }.average().takeIf { !it.isNaN() }?.toInt()
             ?: estimateRestingHeartRate(rawHeartRate)
+        val avgHrvMillis = hrv.map { it.rmssdMillis }.average().takeIf { !it.isNaN() }
+            ?: estimateHrvMillis(rawHeartRate)
 
         val sleepEntity = db.sleepDao().sessionsBetween(start.toEpochMilli(), end.toEpochMilli()).maxByOrNull {
             it.endEpochMillis - it.startEpochMillis
@@ -143,12 +163,7 @@ class HealthDataRepository @Inject constructor(
 
         return DailyHealthSnapshot(
             date = start,
-            // Real HRV (RMSSD) needs beat-to-beat R-R interval timing, which
-            // basic/consumer optical sensors generally can't produce at all —
-            // there's no honest fallback here the way there is for resting HR,
-            // so this stays null unless a real HeartRateVariabilityRmssdRecord
-            // exists.
-            avgHrvMillis = hrv.map { it.rmssdMillis }.average().takeIf { !it.isNaN() },
+            avgHrvMillis = avgHrvMillis,
             restingHeartRateBpm = restingHeartRateBpm,
             sleep = sleep,
             respiratoryRateBpm = respiratory.map { it.breathsPerMinute }.average().takeIf { !it.isNaN() },
