@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -20,6 +21,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,6 +38,8 @@ import com.vitalcore.app.ui.components.ProfileAvatar
 import com.vitalcore.app.ui.screens.account.AccountViewModel
 import com.vitalcore.app.ui.screens.account.ProfileViewModel
 import com.vitalcore.app.ui.screens.connections.ConnectionsSection
+import com.vitalcore.app.ui.theme.RecoveryGreen
+import com.vitalcore.app.ui.theme.RecoveryRed
 import java.io.File
 
 /**
@@ -61,6 +66,8 @@ fun SettingsScreen(
         item { AccountSection() }
 
         item { ProfileCard() }
+
+        item { DiagnosticsCard() }
 
         item { ConnectionsSection(onOpenAppleHealthImport = onOpenAppleHealthImport) }
 
@@ -233,6 +240,54 @@ private fun ProfileCard(viewModel: ProfileViewModel = hiltViewModel()) {
         }
     }
 }
+
+/**
+ * Shows exactly which Health Connect permissions are granted right now, plus
+ * live counts of raw records actually read — see
+ * HealthConnectDiagnosticsViewModel's kdoc for why this exists.
+ */
+@Composable
+private fun DiagnosticsCard(viewModel: HealthConnectDiagnosticsViewModel = hiltViewModel()) {
+    val state by viewModel.state.collectAsState()
+    LaunchedEffect(Unit) { viewModel.run() }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Health Connect diagnostics", style = MaterialTheme.typography.titleMedium)
+                if (state.running) CircularProgressIndicator(modifier = Modifier.size(18.dp))
+                else TextButton(onClick = viewModel::run) { Text("Refresh") }
+            }
+            Text("Availability: ${state.availability ?: "—"}", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                "Heart rate samples, last 7 days: ${state.heartRateSamples7d ?: "—"}",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Text(
+                "Sleep sessions, last 7 days: ${state.sleepSessions7d ?: "—"}",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Text("Permissions", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 4.dp))
+            state.permissions.forEach { p ->
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        if (p.granted) "✓" else "✗",
+                        color = if (p.granted) RecoveryGreen else RecoveryRed,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(p.label, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun androidx.compose.ui.unit.Dp.let(block: (androidx.compose.ui.unit.Dp) -> Unit) = Unit // unused placeholder removed below
 
 @Composable
 private fun ToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
