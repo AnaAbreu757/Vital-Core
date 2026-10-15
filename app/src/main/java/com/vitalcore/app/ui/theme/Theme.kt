@@ -11,8 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColors = darkColorScheme(
-    primary = RecoveryGreen,
-    secondary = StrainBlue,
+    primary = StrainBlue,
+    secondary = RecoveryYellow,
     tertiary = SleepPurple,
     error = RecoveryRed,
     background = BackgroundDark,
@@ -24,8 +24,8 @@ private val DarkColors = darkColorScheme(
 )
 
 private val LightColors = lightColorScheme(
-    primary = RecoveryGreen,
-    secondary = StrainBlue,
+    primary = StrainBlue,
+    secondary = RecoveryYellow,
     tertiary = SleepPurple,
     error = RecoveryRed,
     background = BackgroundLight,
@@ -37,7 +37,7 @@ private val LightColors = lightColorScheme(
 )
 
 /**
- * App-wide theme. Defaults to the WHOOP-style dark palette regardless of the
+ * App-wide theme. Defaults to the dark navy/blue palette regardless of the
  * system setting (darkTheme defaults to true, not isSystemInDarkTheme()) to
  * match the web dashboard's always-dark design; still overridable, and still
  * supports Material You dynamic color on Android 12+ if ever enabled.
