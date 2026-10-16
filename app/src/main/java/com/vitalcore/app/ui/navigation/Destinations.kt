@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Nightlight
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,9 +25,10 @@ sealed class VitalCoreDestination(
     data object Sleep : VitalCoreDestination("sleep", "Sleep", Icons.Filled.Nightlight)
     data object Activity : VitalCoreDestination("activity", "Activity", Icons.Outlined.DirectionsRun)
     data object Health : VitalCoreDestination("health", "Health", Icons.Filled.MonitorHeart)
+    data object Coach : VitalCoreDestination("coach", "Coach", Icons.Filled.Psychology)
     data object Settings : VitalCoreDestination("settings", "Settings", Icons.Filled.Settings)
 
     companion object {
-        val bottomNavItems = listOf(Home, Recovery, Sleep, Activity, Health, Settings)
+        val bottomNavItems = listOf(Home, Recovery, Sleep, Activity, Health, Coach, Settings)
     }
 }
