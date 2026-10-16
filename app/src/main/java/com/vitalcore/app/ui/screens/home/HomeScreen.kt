@@ -1,18 +1,16 @@
 package com.vitalcore.app.ui.screens.home
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
@@ -30,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -117,9 +114,9 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = RecoveryRed.copy(alpha = 0.15f)),
                 ) {
-                    Column(modifier = Modifier.androidx.compose.foundation.layout.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text("Refresh failed", style = MaterialTheme.typography.labelMedium, color = RecoveryRed)
-                        Text(err, style = MaterialTheme.typography.bodySmall, modifier = Modifier.androidx.compose.foundation.layout.padding(top = 4.dp))
+                        Text(err, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
                     }
                 }
             }
@@ -158,7 +155,7 @@ fun HomeScreen(
                 Text(
                     state.topInsight ?: "Not enough data yet to generate a personalized insight.",
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.androidx.compose.foundation.layout.padding(top = 4.dp),
+                    modifier = Modifier.padding(top = 4.dp),
                 )
             }
         }
@@ -167,7 +164,7 @@ fun HomeScreen(
             DashboardCard {
                 Text("HEALTH MONITOR", style = MaterialTheme.typography.labelSmall, color = OnSurfaceMutedDark)
                 LazyRow(
-                    modifier = Modifier.androidx.compose.foundation.layout.padding(top = 10.dp),
+                    modifier = Modifier.padding(top = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(
