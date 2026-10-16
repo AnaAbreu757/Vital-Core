@@ -1,22 +1,18 @@
 package com.vitalcore.app.ui.screens.home
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
@@ -35,10 +31,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,14 +38,15 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.vitalcore.app.ui.components.DashboardCard
 import com.vitalcore.app.ui.components.ProfileAvatar
+import com.vitalcore.app.ui.components.RingGauge
+import com.vitalcore.app.ui.components.StatTile
 import com.vitalcore.app.ui.screens.account.ProfileViewModel
 import com.vitalcore.app.ui.theme.OnSurfaceMutedDark
 import com.vitalcore.app.ui.theme.RecoveryGreen
 import com.vitalcore.app.ui.theme.RecoveryRed
-import com.vitalcore.app.ui.theme.RecoveryYellow
 import com.vitalcore.app.ui.theme.StrainBlue
-import com.vitalcore.app.ui.theme.SurfaceDark
 import com.vitalcore.app.ui.theme.SurfaceDarkElevated
 import com.vitalcore.app.ui.theme.zoneColor
 import kotlin.math.roundToInt
@@ -62,9 +55,9 @@ import kotlin.math.roundToInt
  * Dashboard: a WHOOP/Bevel-style triple-ring overview (Strain / Recovery /
  * Sleep), a coaching-style insight banner, a Health Monitor stat grid, and
  * quick actions — all backed by [HomeViewModel], which runs the real
- * calculation engine over synced Health Connect data. The ring colors and
- * zoneColor() thresholds are the same ones the web dashboard uses (see
- * ui/theme/Color.kt), so both read as the same product.
+ * calculation engine over synced Health Connect data. Uses the same shared
+ * DashboardCard/RingGauge/StatTile widgets as Recovery/Sleep/Activity/Health
+ * so every screen reads as the same product.
  *
  * Re-syncs on every app resume and via the manual refresh button, since
  * there's no periodic background worker yet — see HomeViewModel's kdoc.
@@ -123,11 +116,10 @@ fun HomeScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = RecoveryRed.copy(alpha = 0.15f)),
-                    shape = RoundedCornerShape(16.dp),
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.androidx.compose.foundation.layout.padding(16.dp)) {
                         Text("Refresh failed", style = MaterialTheme.typography.labelMedium, color = RecoveryRed)
-                        Text(err, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                        Text(err, style = MaterialTheme.typography.bodySmall, modifier = Modifier.androidx.compose.foundation.layout.padding(top = 4.dp))
                     }
                 }
             }
@@ -166,7 +158,7 @@ fun HomeScreen(
                 Text(
                     state.topInsight ?: "Not enough data yet to generate a personalized insight.",
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(top = 4.dp),
+                    modifier = Modifier.androidx.compose.foundation.layout.padding(top = 4.dp),
                 )
             }
         }
@@ -175,7 +167,7 @@ fun HomeScreen(
             DashboardCard {
                 Text("HEALTH MONITOR", style = MaterialTheme.typography.labelSmall, color = OnSurfaceMutedDark)
                 LazyRow(
-                    modifier = Modifier.padding(top = 10.dp),
+                    modifier = Modifier.androidx.compose.foundation.layout.padding(top = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(
@@ -185,7 +177,7 @@ fun HomeScreen(
                             Triple("Steps", state.steps?.toString() ?: "--", ""),
                             Triple("Calories", state.calories?.roundToInt()?.toString() ?: "--", "kcal"),
                         )
-                    ) { (label, value, unit) -> VitalTile(label, value, unit) }
+                    ) { (label, value, unit) -> StatTile(label, value, unit, dotColor = RecoveryGreen) }
                 }
             }
         }
@@ -241,84 +233,5 @@ private fun TopBar(
                 Icon(Icons.Default.Refresh, contentDescription = "Sync Health Connect now")
             }
         }
-    }
-}
-
-@Composable
-private fun DashboardCard(content: @Composable ColumnScope.() -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Column(modifier = Modifier.padding(16.dp), content = content)
-    }
-}
-
-@Composable
-private fun RingGauge(label: String, display: String, fraction: Float, color: Color) {
-    val clamped = fraction.coerceIn(0f, 1f)
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(84.dp)) {
-            Canvas(modifier = Modifier.size(84.dp)) {
-                val stroke = 8.dp.toPx()
-                val topLeft = androidx.compose.ui.geometry.Offset(stroke / 2, stroke / 2)
-                val arcSize = Size(size.width - stroke, size.height - stroke)
-
-                drawArc(
-                    color = SurfaceDarkElevated,
-                    startAngle = -90f,
-                    sweepAngle = 360f,
-                    useCenter = false,
-                    topLeft = topLeft,
-                    size = arcSize,
-                    style = Stroke(stroke, cap = StrokeCap.Round),
-                )
-                for (i in 3 downTo 1) {
-                    drawArc(
-                        color = color.copy(alpha = 0.08f * i),
-                        startAngle = -90f,
-                        sweepAngle = 360f * clamped,
-                        useCenter = false,
-                        topLeft = androidx.compose.ui.geometry.Offset(topLeft.x - i * 2.dp.toPx(), topLeft.y - i * 2.dp.toPx()),
-                        size = Size(arcSize.width + i * 4.dp.toPx(), arcSize.height + i * 4.dp.toPx()),
-                        style = Stroke(stroke, cap = StrokeCap.Round),
-                    )
-                }
-                drawArc(
-                    color = color,
-                    startAngle = -90f,
-                    sweepAngle = 360f * clamped,
-                    useCenter = false,
-                    topLeft = topLeft,
-                    size = arcSize,
-                    style = Stroke(stroke, cap = StrokeCap.Round),
-                )
-            }
-            Text(display, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-        Text(
-            label.uppercase(),
-            style = MaterialTheme.typography.labelSmall,
-            color = OnSurfaceMutedDark,
-            modifier = Modifier.padding(top = 6.dp),
-        )
-    }
-}
-
-@Composable
-private fun VitalTile(label: String, value: String, unit: String) {
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceDarkElevated)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(RecoveryGreen))
-            Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = OnSurfaceMutedDark)
-        }
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
-        if (unit.isNotEmpty()) Text(unit, style = MaterialTheme.typography.labelSmall, color = OnSurfaceMutedDark)
     }
 }
