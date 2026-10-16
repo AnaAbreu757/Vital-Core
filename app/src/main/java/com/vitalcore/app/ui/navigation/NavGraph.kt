@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vitalcore.app.ui.screens.activity.ActivityScreen
 import com.vitalcore.app.ui.screens.aicoach.AiCoachScreen
+import com.vitalcore.app.ui.screens.coach.CoachScreen
 import com.vitalcore.app.ui.screens.friends.FriendsScreen
 import com.vitalcore.app.ui.screens.health.HealthScreen
 import com.vitalcore.app.ui.screens.home.HomeScreen
@@ -36,7 +37,7 @@ private const val ROUTE_STREAK = "streak"
 private const val ROUTE_FRIENDS = "friends"
 
 /**
- * Root navigation host. Gates the six-tab main experience behind onboarding:
+ * Root navigation host. Gates the main experience behind onboarding:
  * first-ever launch shows [OnboardingScreen]; once complete (persisted via
  * SettingsRepository/DataStore) subsequent launches go straight to Home.
  * This gate is a simple conditional composition (not a NavHost route) since
@@ -109,6 +110,9 @@ private fun MainScaffold() {
             composable(VitalCoreDestination.Activity.route) { ActivityScreen() }
             composable(VitalCoreDestination.Health.route) {
                 HealthScreen(onOpenNutrition = { navController.navigate(ROUTE_NUTRITION) })
+            }
+            composable(VitalCoreDestination.Coach.route) {
+                CoachScreen(onOpenAiCoach = { navController.navigate(ROUTE_AI_COACH) })
             }
             composable(VitalCoreDestination.Settings.route) {
                 SettingsScreen(onOpenAppleHealthImport = { navController.navigate(ROUTE_IMPORT_APPLE_HEALTH) })
