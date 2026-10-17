@@ -2,6 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Android 11+ hides other apps' existence by default unless declared
+         here. Without visibility into Health Connect's own package, its SDK
+         status checks and permission grant flow can fail in ways that look
+         exactly like "permissions won't stay granted" — see
+         https://developer.android.com/health-and-fitness/guides/health-connect/develop/get-started -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
+
     <!-- Health Connect requires every permission to be declared here AND
          requested at runtime via PermissionController (see
          HealthConnectPermissions.ALL and HealthConnectPermissionsRationaleActivity
